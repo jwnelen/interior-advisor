@@ -825,7 +825,7 @@ export default function RoomPage() {
 
       {/* Lightbox */}
       <Dialog open={lightboxIndex !== null} onOpenChange={(open) => !open && setLightboxIndex(null)}>
-        <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0">
+        <DialogContent className="!max-w-[98vw] w-[98vw] h-[95vh] p-0" showCloseButton={false}>
           <div className="relative h-full w-full bg-black">
             <button
               type="button"
@@ -861,15 +861,49 @@ export default function RoomPage() {
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
-                <div className="h-full w-full flex flex-col items-center justify-center gap-4 px-6 py-8">
-                  <img
-                    src={completedVisualizations[lightboxIndex]?.output?.url}
-                    alt="Visualization"
-                    className="max-h-[70vh] max-w-full object-contain"
-                  />
-                  <p className="text-sm text-slate-200 text-center whitespace-pre-wrap break-words max-w-4xl">
-                    {completedVisualizations[lightboxIndex]?.input.prompt}
-                  </p>
+                <div className="h-full w-full flex flex-col px-16 py-6 gap-3">
+                  {(() => {
+                    const currentVis = completedVisualizations[lightboxIndex];
+                    const originalPhoto = room.photos.find(
+                      (p) => p.storageId === currentVis?.originalPhotoId
+                    );
+
+                    return (
+                      <>
+                        <div className="grid grid-cols-2 gap-6 flex-1 overflow-hidden">
+                          {/* Original Photo */}
+                          <div className="flex flex-col gap-1 h-full overflow-hidden">
+                            <p className="text-xs text-slate-400 uppercase tracking-wide text-center flex-shrink-0">Original</p>
+                            <div className="flex-1 flex items-center justify-center overflow-hidden">
+                              {originalPhoto ? (
+                                <img
+                                  src={originalPhoto.url}
+                                  alt="Original room"
+                                  className="w-full h-full object-contain rounded"
+                                />
+                              ) : (
+                                <div className="text-slate-400 text-sm">Original photo not available</div>
+                              )}
+                            </div>
+                          </div>
+                          {/* Generated Image */}
+                          <div className="flex flex-col gap-1 h-full overflow-hidden">
+                            <p className="text-xs text-slate-400 uppercase tracking-wide text-center flex-shrink-0">Generated</p>
+                            <div className="flex-1 flex items-center justify-center overflow-hidden">
+                              <img
+                                src={currentVis?.output?.url}
+                                alt="Generated visualization"
+                                className="w-full h-full object-contain rounded"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-sm text-slate-200 text-center whitespace-pre-wrap break-words px-4 flex-shrink-0">
+                          {currentVis?.input.prompt}
+                        </p>
+                      </>
+                    );
+                  })()}
                 </div>
               </>
             ) : null}
