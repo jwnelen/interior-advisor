@@ -57,17 +57,17 @@ export const generateVisualization = internalAction({
       console.log(`${logPrefix} Calling Replicate API`);
       // Use SD2.1 img2img for a lighter, cheaper model while preserving room structure.
       const rawOutput = await replicate.run(
-        "stability-ai/stable-diffusion-img2img:15a3689ee13b0d2616e98820eca31d4c3abcd36672df6afce5cb6feb1d66087d",
+        "google/nano-banana",
         {
           input: {
-            image: inputImageUrl,
             prompt: buildInteriorPrompt(args.prompt),
-            negative_prompt: NEGATIVE_PROMPT,
-            prompt_strength: Math.min(Math.max(args.strength, 0), 1),
-            num_inference_steps: 25, // Slightly increased for better quality
-            guidance_scale: 7.5,
-            scheduler: "DPMSolverMultistep",
-            num_outputs: 1,
+            image_input: [inputImageUrl],
+            // negative_prompt: NEGATIVE_PROMPT,
+            // prompt_strength: Math.min(Math.max(args.strength, 0), 1),
+            // num_inference_steps: 25, // Slightly increased for better quality
+            // guidance_scale: 7.5,
+            // scheduler: "DPMSolverMultistep",
+            // num_outputs: 1,
           },
         }
       );
