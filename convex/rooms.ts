@@ -81,6 +81,14 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("rooms") },
   handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.id);
+    if (!room) return;
+
+    // Delete room photos from storage
+    for (const photo of room.photos) {
+      await ctx.storage.delete(photo.storageId);
+    }
+
     // Delete associated analyses
     const analyses = await ctx.db
       .query("analyses")
@@ -105,6 +113,9 @@ export const remove = mutation({
       .withIndex("by_room", (q) => q.eq("roomId", args.id))
       .collect();
     for (const vis of visualizations) {
+      if (vis.output?.storageId) {
+        await ctx.storage.delete(vis.output.storageId);
+      }
       await ctx.db.delete(vis._id);
     }
 
