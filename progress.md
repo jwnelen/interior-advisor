@@ -27,6 +27,8 @@
 - [x] Style quiz saving and calculation
 - [x] Style quiz preferences synced to project style profiles
 - [x] Robust visualization generation pipeline with clear failure feedback
+- [x] Storage maintenance: Orphan image cleanup mutation
+- [x] Cascading deletion for Rooms and Projects with storage cleanup
 
 #### AI Integration
 - [x] Scene Analysis with GPT-4o Vision
@@ -47,9 +49,9 @@
 - [x] Landing page with features overview
 - [x] Dashboard with project management
 - [x] Style Discovery Quiz
-  - Image preference pairs
-  - Preference sliders
-  - Mood board selection
+  - Image preference pairs (with real images)
+  - Preference sliders (with visual anchors)
+  - Mood board selection (with representative style images)
   - Style profile calculation
 - [x] Project detail page with room management
 - [x] Room detail page
@@ -85,8 +87,6 @@
 - [ ] Re-generate recommendations
 
 #### Low Priority (Future Enhancements)
-- [ ] Style quiz images (currently using placeholder colors)
-- [ ] Mood board with real images
 - [ ] Product matching integration
 - [ ] Export action plan
 - [ ] Mobile responsiveness improvements
@@ -97,9 +97,8 @@
 ---
 
 ### Known Issues
-1. Style quiz uses placeholder colors instead of real images
-2. Visualization may fail if Replicate API is not configured
-3. No retry mechanism for failed AI operations in UI
+1. Visualization may fail if Replicate API is not configured
+2. No retry mechanism for failed AI operations in UI
 
 ---
 
