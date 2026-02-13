@@ -43,7 +43,7 @@ export default defineSchema({
     photos: v.array(v.object({
       storageId: v.id("_storage"),
       url: v.string(),
-      isPrimary: v.boolean(),
+      isPrimary: v.optional(v.boolean()),
       uploadedAt: v.number(),
     })),
     dimensions: v.optional(v.object({
@@ -61,7 +61,8 @@ export default defineSchema({
   // VLM scene analysis results
   analyses: defineTable({
     roomId: v.id("rooms"),
-    photoStorageId: v.id("_storage"),
+    photoStorageId: v.optional(v.id("_storage")),
+    photoStorageIds: v.optional(v.array(v.id("_storage"))),
     status: v.union(
       v.literal("pending"),
       v.literal("processing"),
@@ -140,6 +141,7 @@ export default defineSchema({
       ),
       reasoning: v.string(),
       visualizationPrompt: v.optional(v.string()),
+      suggestedPhotoStorageId: v.optional(v.id("_storage")),
       selected: v.optional(v.boolean()),
     })),
     summary: v.optional(v.string()),

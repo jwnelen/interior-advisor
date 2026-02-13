@@ -117,6 +117,7 @@ export const save = internalMutation({
       ),
       reasoning: v.string(),
       visualizationPrompt: v.optional(v.string()),
+      suggestedPhotoStorageId: v.optional(v.id("_storage")),
       selected: v.optional(v.boolean()),
     })),
     summary: v.optional(v.string()),

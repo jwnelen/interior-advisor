@@ -45,6 +45,62 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Semantic surface tokens */
+  --color-surface-page: var(--surface-page);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-inset: var(--surface-inset);
+
+  /* Text hierarchy */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-quaternary: var(--text-quaternary);
+
+  /* Status colors */
+  --color-status-success: var(--status-success);
+  --color-status-success-text: var(--status-success-text);
+  --color-status-info: var(--status-info);
+  --color-status-info-text: var(--status-info-text);
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-text: var(--status-warning-text);
+  --color-status-neutral: var(--status-neutral);
+  --color-status-neutral-text: var(--status-neutral-text);
+
+  /* Feature accents */
+  --color-feature-blue: var(--feature-blue);
+  --color-feature-blue-text: var(--feature-blue-text);
+  --color-feature-purple: var(--feature-purple);
+  --color-feature-purple-text: var(--feature-purple-text);
+  --color-feature-green: var(--feature-green);
+  --color-feature-green-text: var(--feature-green-text);
+
+  /* Brand accent */
+  --color-accent-brand: var(--accent-brand);
+  --color-accent-brand-light: var(--accent-brand-light);
+  --color-accent-brand-ring: var(--accent-brand-ring);
+
+  /* CTA section */
+  --color-cta-bg: var(--cta-bg);
+  --color-cta-text: var(--cta-text);
+  --color-cta-muted: var(--cta-muted);
+
+  /* Step indicator */
+  --color-step-bg: var(--step-bg);
+  --color-step-text: var(--step-text);
+
+  /* Selection state */
+  --color-selection-border: var(--selection-border);
+  --color-selection-bg: var(--selection-bg);
+  --color-selection-ring: var(--selection-ring);
+
+  /* Constraint badges */
+  --color-constraint-rental: var(--constraint-rental);
+  --color-constraint-rental-text: var(--constraint-rental-text);
+  --color-constraint-pet: var(--constraint-pet);
+  --color-constraint-pet-text: var(--constraint-pet-text);
+  --color-constraint-child: var(--constraint-child);
+  --color-constraint-child-text: var(--constraint-child-text);
 }
 
 :root {
@@ -80,6 +136,62 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Semantic surfaces */
+  --surface-page: oklch(0.97 0 0);
+  --surface-elevated: oklch(1 0 0);
+  --surface-inset: oklch(0.95 0 0);
+
+  /* Text hierarchy */
+  --text-primary: oklch(0.15 0 0);
+  --text-secondary: oklch(0.4 0 0);
+  --text-tertiary: oklch(0.55 0 0);
+  --text-quaternary: oklch(0.65 0 0);
+
+  /* Status */
+  --status-success: oklch(0.93 0.05 145);
+  --status-success-text: oklch(0.35 0.1 145);
+  --status-info: oklch(0.93 0.04 250);
+  --status-info-text: oklch(0.35 0.1 250);
+  --status-warning: oklch(0.94 0.06 85);
+  --status-warning-text: oklch(0.35 0.1 85);
+  --status-neutral: oklch(0.95 0 0);
+  --status-neutral-text: oklch(0.35 0 0);
+
+  /* Feature accents */
+  --feature-blue: oklch(0.93 0.04 250);
+  --feature-blue-text: oklch(0.5 0.15 250);
+  --feature-purple: oklch(0.93 0.04 300);
+  --feature-purple-text: oklch(0.5 0.15 300);
+  --feature-green: oklch(0.93 0.04 145);
+  --feature-green-text: oklch(0.5 0.15 145);
+
+  /* Brand */
+  --accent-brand: oklch(0.5 0.2 300);
+  --accent-brand-light: oklch(0.95 0.03 300);
+  --accent-brand-ring: oklch(0.55 0.2 300);
+
+  /* CTA */
+  --cta-bg: oklch(0.15 0 0);
+  --cta-text: oklch(1 0 0);
+  --cta-muted: oklch(0.7 0 0);
+
+  /* Step indicator */
+  --step-bg: oklch(0.15 0 0);
+  --step-text: oklch(1 0 0);
+
+  /* Selection */
+  --selection-border: oklch(0.6 0.15 250);
+  --selection-bg: transparent;
+  --selection-ring: oklch(0.85 0.06 250);
+
+  /* Constraint badges */
+  --constraint-rental: oklch(0.93 0.04 250);
+  --constraint-rental-text: oklch(0.35 0.1 250);
+  --constraint-pet: oklch(0.93 0.05 145);
+  --constraint-pet-text: oklch(0.35 0.1 145);
+  --constraint-child: oklch(0.94 0.06 85);
+  --constraint-child-text: oklch(0.35 0.1 85);
 }
 
 .dark {
@@ -114,6 +226,62 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Semantic surfaces */
+  --surface-page: oklch(0.16 0 0);
+  --surface-elevated: oklch(0.21 0 0);
+  --surface-inset: oklch(0.19 0 0);
+
+  /* Text hierarchy */
+  --text-primary: oklch(0.95 0 0);
+  --text-secondary: oklch(0.7 0 0);
+  --text-tertiary: oklch(0.6 0 0);
+  --text-quaternary: oklch(0.5 0 0);
+
+  /* Status */
+  --status-success: oklch(0.25 0.06 145);
+  --status-success-text: oklch(0.75 0.1 145);
+  --status-info: oklch(0.25 0.06 250);
+  --status-info-text: oklch(0.75 0.1 250);
+  --status-warning: oklch(0.27 0.06 85);
+  --status-warning-text: oklch(0.75 0.1 85);
+  --status-neutral: oklch(0.23 0 0);
+  --status-neutral-text: oklch(0.7 0 0);
+
+  /* Feature accents */
+  --feature-blue: oklch(0.25 0.06 250);
+  --feature-blue-text: oklch(0.7 0.12 250);
+  --feature-purple: oklch(0.25 0.06 300);
+  --feature-purple-text: oklch(0.7 0.12 300);
+  --feature-green: oklch(0.25 0.06 145);
+  --feature-green-text: oklch(0.7 0.12 145);
+
+  /* Brand */
+  --accent-brand: oklch(0.65 0.2 300);
+  --accent-brand-light: oklch(0.22 0.05 300);
+  --accent-brand-ring: oklch(0.6 0.2 300);
+
+  /* CTA */
+  --cta-bg: oklch(0.26 0 0);
+  --cta-text: oklch(0.95 0 0);
+  --cta-muted: oklch(0.6 0 0);
+
+  /* Step indicator */
+  --step-bg: oklch(0.95 0 0);
+  --step-text: oklch(0.15 0 0);
+
+  /* Selection */
+  --selection-border: oklch(0.6 0.15 250);
+  --selection-bg: oklch(0.2 0.03 250);
+  --selection-ring: oklch(0.35 0.08 250);
+
+  /* Constraint badges */
+  --constraint-rental: oklch(0.25 0.06 250);
+  --constraint-rental-text: oklch(0.75 0.1 250);
+  --constraint-pet: oklch(0.25 0.06 145);
+  --constraint-pet-text: oklch(0.75 0.1 145);
+  --constraint-child: oklch(0.27 0.06 85);
+  --constraint-child-text: oklch(0.75 0.1 85);
 }
 
 @layer base {

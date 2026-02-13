@@ -91,7 +91,7 @@ export const IMPACT_LABELS = {
 } as const;
 
 export const IMPACT_COLORS = {
-  high: "bg-green-100 text-green-800",
-  medium: "bg-yellow-100 text-yellow-800",
-  low: "bg-gray-100 text-gray-800",
+  high: "bg-status-success text-status-success-text",
+  medium: "bg-status-warning text-status-warning-text",
+  low: "bg-status-neutral text-status-neutral-text",
 } as const;

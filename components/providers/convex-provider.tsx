@@ -43,8 +43,8 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Convex Not Configured</h1>
-          <p className="text-slate-500 mb-4">
-            Run <code className="bg-slate-100 px-2 py-1 rounded">npx convex dev</code> to set up the backend.
+          <p className="text-text-tertiary mb-4">
+            Run <code className="bg-surface-inset px-2 py-1 rounded">npx convex dev</code> to set up the backend.
           </p>
         </div>
       </div>
@@ -54,7 +54,7 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
   if (!client) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-slate-500">Loading...</p>
+        <p className="text-text-tertiary">Loading...</p>
       </div>
     );
   }

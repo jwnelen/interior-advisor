@@ -37,7 +37,7 @@ export interface Room {
   photos: {
     storageId: Id<"_storage">;
     url: string;
-    isPrimary: boolean;
+    isPrimary?: boolean;
     uploadedAt: number;
   }[];
   dimensions?: {
@@ -55,7 +55,8 @@ export interface Analysis {
   _id: Id<"analyses">;
   _creationTime: number;
   roomId: Id<"rooms">;
-  photoStorageId: Id<"_storage">;
+  photoStorageId?: Id<"_storage">;
+  photoStorageIds?: Id<"_storage">[];
   status: "pending" | "processing" | "completed" | "failed";
   results?: {
     furniture: {
@@ -105,6 +106,7 @@ export interface RecommendationItem {
   difficulty: "diy" | "easy_install" | "professional";
   reasoning: string;
   visualizationPrompt?: string;
+  suggestedPhotoStorageId?: Id<"_storage">;
   selected?: boolean;
 }
 

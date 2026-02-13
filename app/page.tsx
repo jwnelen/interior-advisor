@@ -3,27 +3,31 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-surface-page to-surface-elevated">
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
         <nav className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-slate-900">Interior Advisor</h1>
-          <Link href="/dashboard">
-            <Button variant="outline">My Projects</Button>
-          </Link>
+          <h1 className="text-2xl font-bold text-text-primary">Interior Advisor</h1>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link href="/dashboard">
+              <Button variant="outline">My Projects</Button>
+            </Link>
+          </div>
         </nav>
       </header>
 
       {/* Hero Section */}
       <main className="container mx-auto px-4 py-16">
         <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-5xl font-bold text-slate-900 mb-6">
+          <h2 className="text-5xl font-bold text-text-primary mb-6">
             Transform Your Space with AI-Powered Design
           </h2>
-          <p className="text-xl text-slate-600 mb-8">
+          <p className="text-xl text-text-secondary mb-8">
             Upload photos of your room, discover your style, and get personalized
             recommendations with realistic visualizations. Professional interior
             design guidance, without the designer fees.
@@ -46,9 +50,9 @@ export default function LandingPage() {
         <div className="grid md:grid-cols-3 gap-8 mt-24">
           <Card className="border-0 shadow-lg">
             <CardContent className="pt-6">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-feature-blue rounded-lg flex items-center justify-center mb-4">
                 <svg
-                  className="w-6 h-6 text-blue-600"
+                  className="w-6 h-6 text-feature-blue-text"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -68,7 +72,7 @@ export default function LandingPage() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold mb-2">AI Scene Analysis</h3>
-              <p className="text-slate-600">
+              <p className="text-text-secondary">
                 Upload a photo and our AI instantly analyzes your furniture,
                 lighting, colors, and layout to understand your space.
               </p>
@@ -77,9 +81,9 @@ export default function LandingPage() {
 
           <Card className="border-0 shadow-lg">
             <CardContent className="pt-6">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-feature-purple rounded-lg flex items-center justify-center mb-4">
                 <svg
-                  className="w-6 h-6 text-purple-600"
+                  className="w-6 h-6 text-feature-purple-text"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -93,7 +97,7 @@ export default function LandingPage() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold mb-2">Smart Recommendations</h3>
-              <p className="text-slate-600">
+              <p className="text-text-secondary">
                 Get two tiers of suggestions: quick affordable wins under $200
                 and larger transformations for maximum impact.
               </p>
@@ -102,9 +106,9 @@ export default function LandingPage() {
 
           <Card className="border-0 shadow-lg">
             <CardContent className="pt-6">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-feature-green rounded-lg flex items-center justify-center mb-4">
                 <svg
-                  className="w-6 h-6 text-green-600"
+                  className="w-6 h-6 text-feature-green-text"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -118,7 +122,7 @@ export default function LandingPage() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold mb-2">Visualize Changes</h3>
-              <p className="text-slate-600">
+              <p className="text-text-secondary">
                 See AI-generated images of how recommendations would look in
                 your actual space before making any purchases.
               </p>
@@ -153,20 +157,20 @@ export default function LandingPage() {
               },
             ].map((item) => (
               <div key={item.step} className="text-center">
-                <div className="w-12 h-12 bg-slate-900 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+                <div className="w-12 h-12 bg-step-bg text-step-text rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                   {item.step}
                 </div>
                 <h4 className="font-semibold mb-2">{item.title}</h4>
-                <p className="text-slate-600 text-sm">{item.description}</p>
+                <p className="text-text-secondary text-sm">{item.description}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* CTA Section */}
-        <div className="mt-24 text-center bg-slate-900 text-white rounded-2xl p-12">
+        <div className="mt-24 text-center bg-cta-bg text-cta-text rounded-2xl p-12">
           <h3 className="text-3xl font-bold mb-4">Ready to Transform Your Space?</h3>
-          <p className="text-slate-300 mb-8 max-w-xl mx-auto">
+          <p className="text-cta-muted mb-8 max-w-xl mx-auto">
             Start with a free style discovery quiz or jump right into creating
             your first project. No account required.
           </p>
@@ -180,7 +184,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="container mx-auto px-4 py-8 mt-16 border-t">
-        <div className="text-center text-slate-500 text-sm">
+        <div className="text-center text-text-tertiary text-sm">
           <p>Interior Advisor - AI-Powered Home Design Assistant</p>
         </div>
       </footer>

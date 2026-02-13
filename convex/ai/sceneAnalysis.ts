@@ -5,12 +5,15 @@ import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 import OpenAI from "openai";
 
-const SCENE_ANALYSIS_SYSTEM_PROMPT = `You are an expert interior designer analyzing room photographs. Provide detailed, structured analysis of:
+const SCENE_ANALYSIS_SYSTEM_PROMPT = `You are an expert interior designer analyzing room photographs. You may receive multiple photos of the same room from different angles. Combine observations from all provided images into a single comprehensive analysis.
+
+Provide detailed, structured analysis of:
 - Furniture items (type, style, condition, placement)
 - Lighting (natural light sources, artificial fixtures, overall assessment)
 - Color palette (dominant colors, accents, warmth/coolness)
 - Room layout (traffic flow, focal points, problem areas)
 - Overall style (detected style, confidence, supporting elements)
+- Per-photo descriptions (a short description of what each photo shows, used to match recommendations to specific photos later)
 
 You must respond with valid JSON matching this exact structure:
 {
@@ -36,28 +39,30 @@ You must respond with valid JSON matching this exact structure:
     "detected": "modern|scandinavian|industrial|traditional|bohemian|minimalist|coastal|mid-century|transitional|eclectic",
     "confidence": 0.0-1.0,
     "elements": ["list of style elements"]
-  }
+  },
+  "photoDescriptions": ["short description of what photo 0 shows", "short description of what photo 1 shows"]
 }`;
 
-const SCENE_ANALYSIS_USER_PROMPT = `Analyze this room photograph and provide a detailed assessment. Focus on:
-1. What furniture is present and its current condition/style
+const SCENE_ANALYSIS_USER_PROMPT = `Analyze these room photographs and provide a detailed assessment combining observations from all provided images. The images show the same room from different angles. Focus on:
+1. What furniture is present and its current condition/style (cross-reference across photos)
 2. How is the lighting (natural and artificial)
 3. What colors dominate the space
 4. How does the layout work (or not work)
 5. What interior design style best describes this room
+6. For each photo (in order), provide a short description of what area/angle it shows
 
 Respond with JSON only.`;
 
 export const analyze = internalAction({
   args: {
     roomId: v.id("rooms"),
-    photoStorageId: v.id("_storage"),
+    photoStorageIds: v.array(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     // Create analysis record
     const analysisId = await ctx.runMutation(internal.analyses.create, {
       roomId: args.roomId,
-      photoStorageId: args.photoStorageId,
+      photoStorageIds: args.photoStorageIds,
     });
 
     try {
@@ -66,10 +71,33 @@ export const analyze = internalAction({
         status: "processing",
       });
 
-      const imageUrl = await ctx.storage.getUrl(args.photoStorageId);
-      if (!imageUrl) {
-        throw new Error("Failed to get image URL");
+      // Get URLs for all photos
+      const imageUrls: string[] = [];
+      for (const storageId of args.photoStorageIds) {
+        const url = await ctx.storage.getUrl(storageId);
+        if (url) imageUrls.push(url);
       }
+      if (imageUrls.length === 0) {
+        throw new Error("Failed to get any image URLs");
+      }
+
+      // Build content array with all images
+      const contentParts: Array<
+        | { type: "image_url"; image_url: { url: string; detail: "high" | "auto" } }
+        | { type: "text"; text: string }
+      > = [];
+
+      imageUrls.forEach((url, index) => {
+        contentParts.push({
+          type: "image_url",
+          image_url: { url, detail: index === 0 ? "high" : "auto" },
+        });
+      });
+
+      contentParts.push({
+        type: "text",
+        text: SCENE_ANALYSIS_USER_PROMPT,
+      });
 
       const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
@@ -84,14 +112,11 @@ export const analyze = internalAction({
           },
           {
             role: "user",
-            content: [
-              { type: "image_url", image_url: { url: imageUrl, detail: "high" } },
-              { type: "text", text: SCENE_ANALYSIS_USER_PROMPT },
-            ],
+            content: contentParts,
           },
         ],
         response_format: { type: "json_object" },
-        max_tokens: 2000,
+        max_tokens: 3000,
       });
 
       const content = response.choices[0].message.content;

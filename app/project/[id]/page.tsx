@@ -27,6 +27,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ROOM_TYPES } from "@/lib/constants";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function ProjectPage() {
   const params = useParams();
@@ -61,7 +62,7 @@ export default function ProjectPage() {
   if (project === undefined || rooms === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-slate-500">Loading...</p>
+        <p className="text-text-tertiary">Loading...</p>
       </div>
     );
   }
@@ -80,13 +81,13 @@ export default function ProjectPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-surface-page">
       {/* Header */}
-      <header className="bg-white border-b">
+      <header className="bg-surface-elevated border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/dashboard" className="text-slate-500 hover:text-slate-900">
+              <Link href="/dashboard" className="text-text-tertiary hover:text-text-primary">
                 <svg
                   className="w-6 h-6"
                   fill="none"
@@ -104,18 +105,21 @@ export default function ProjectPage() {
               <div>
                 <h1 className="text-2xl font-bold">{project.name}</h1>
                 {project.description && (
-                  <p className="text-sm text-slate-500">{project.description}</p>
+                  <p className="text-sm text-text-tertiary">{project.description}</p>
                 )}
               </div>
             </div>
-            {project.budget && (
-              <div className="text-right">
-                <p className="text-sm text-slate-500">Budget</p>
-                <p className="font-semibold">
-                  ${project.budget.total.toLocaleString()}
-                </p>
-              </div>
-            )}
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              {project.budget && (
+                <div className="text-right">
+                  <p className="text-sm text-text-tertiary">Budget</p>
+                  <p className="font-semibold">
+                    ${project.budget.total.toLocaleString()}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -126,14 +130,14 @@ export default function ProjectPage() {
           {project.styleProfile && (
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-slate-500">Style Profile</CardTitle>
+                <CardTitle className="text-sm text-text-tertiary">Style Profile</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="font-semibold capitalize">
                   {project.styleProfile.primaryStyle}
                 </p>
                 {project.styleProfile.secondaryStyle && (
-                  <p className="text-sm text-slate-600 capitalize">
+                  <p className="text-sm text-text-secondary capitalize">
                     + {project.styleProfile.secondaryStyle}
                   </p>
                 )}
@@ -143,22 +147,22 @@ export default function ProjectPage() {
           {project.constraints && (
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-slate-500">Constraints</CardTitle>
+                <CardTitle className="text-sm text-text-tertiary">Constraints</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-1">
                   {project.constraints.rentalFriendly && (
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                    <span className="text-xs bg-constraint-rental text-constraint-rental-text px-2 py-1 rounded">
                       Rental
                     </span>
                   )}
                   {project.constraints.petFriendly && (
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                    <span className="text-xs bg-constraint-pet text-constraint-pet-text px-2 py-1 rounded">
                       Pet
                     </span>
                   )}
                   {project.constraints.childFriendly && (
-                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                    <span className="text-xs bg-constraint-child text-constraint-child-text px-2 py-1 rounded">
                       Child
                     </span>
                   )}
@@ -168,7 +172,7 @@ export default function ProjectPage() {
           )}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-slate-500">Rooms</CardTitle>
+              <CardTitle className="text-sm text-text-tertiary">Rooms</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="font-semibold">{rooms.length} rooms</p>
@@ -241,7 +245,7 @@ export default function ProjectPage() {
         {rooms.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
-              <div className="text-slate-400 mb-4">
+              <div className="text-text-quaternary mb-4">
                 <svg
                   className="w-16 h-16 mx-auto"
                   fill="none"
@@ -257,7 +261,7 @@ export default function ProjectPage() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold mb-2">No rooms yet</h3>
-              <p className="text-slate-500 mb-4">
+              <p className="text-text-tertiary mb-4">
                 Add rooms to your project to start getting design recommendations
               </p>
               <Button onClick={() => setIsCreateOpen(true)}>Add Your First Room</Button>
@@ -270,23 +274,23 @@ export default function ProjectPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span>{room.name}</span>
-                    <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded capitalize">
+                    <span className="text-xs bg-surface-inset text-text-secondary px-2 py-1 rounded capitalize">
                       {room.type.replace("_", " ")}
                     </span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {room.photos.length > 0 ? (
-                    <div className="aspect-video bg-slate-100 rounded-lg mb-4 overflow-hidden">
+                    <div className="aspect-video bg-surface-inset rounded-lg mb-4 overflow-hidden">
                       <img
-                        src={room.photos.find((p) => p.isPrimary)?.url || room.photos[0].url}
+                        src={room.photos[0].url}
                         alt={room.name}
                         className="w-full h-full object-cover"
                       />
                     </div>
                   ) : (
-                    <div className="aspect-video bg-slate-100 rounded-lg mb-4 flex items-center justify-center">
-                      <div className="text-center text-slate-400">
+                    <div className="aspect-video bg-surface-inset rounded-lg mb-4 flex items-center justify-center">
+                      <div className="text-center text-text-quaternary">
                         <svg
                           className="w-8 h-8 mx-auto mb-2"
                           fill="none"
@@ -304,7 +308,7 @@ export default function ProjectPage() {
                       </div>
                     </div>
                   )}
-                  <div className="flex gap-2 text-sm text-slate-500 mb-4">
+                  <div className="flex gap-2 text-sm text-text-tertiary mb-4">
                     <span>{room.photos.length} photos</span>
                     {room.notes && <span>• Has notes</span>}
                   </div>

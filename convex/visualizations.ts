@@ -31,6 +31,7 @@ export const generate = mutation({
       v.literal("color_change"),
       v.literal("style_transfer")
     ),
+    photoStorageId: v.optional(v.id("_storage")),
     controlNetMode: v.optional(v.string()),
     strength: v.optional(v.number()),
   },
@@ -38,14 +39,14 @@ export const generate = mutation({
     const room = await ctx.db.get(args.roomId);
     if (!room) throw new Error("Room not found");
 
-    const primaryPhoto =
-      room.photos.find((p) => p.isPrimary) ?? room.photos[0];
-    if (!primaryPhoto) throw new Error("No photo available for visualization");
+    // Use the explicitly provided photo, or fall back to first photo
+    const chosenStorageId = args.photoStorageId ?? room.photos[0]?.storageId;
+    if (!chosenStorageId) throw new Error("No photo available for visualization");
 
     const visualizationId = await ctx.db.insert("visualizations", {
       roomId: args.roomId,
       recommendationId: args.recommendationId,
-      originalPhotoId: primaryPhoto.storageId,
+      originalPhotoId: chosenStorageId,
       status: "queued",
       type: args.type,
       input: {
@@ -60,7 +61,7 @@ export const generate = mutation({
     await ctx.scheduler.runAfter(0, internal.ai.imageGeneration.generateVisualization, {
       visualizationId,
       roomId: args.roomId,
-      originalPhotoId: primaryPhoto.storageId,
+      originalPhotoId: chosenStorageId,
       prompt: args.prompt,
       type: args.type,
       controlNetMode: args.controlNetMode ?? "depth",

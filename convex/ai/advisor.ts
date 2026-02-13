@@ -25,6 +25,8 @@ const QUICK_WINS_PROMPT = `Generate 3-5 "quick win" recommendations:
 - Impact: Noticeable improvement
 - Types: Accessories, textiles, lighting, plants, organization, artwork
 
+The room has multiple photos (indexed 0, 1, 2...). For each recommendation, specify "suggestedPhotoIndex" — the index of the photo that best shows the area this recommendation targets. Use the photo descriptions from the analysis to pick the most relevant photo. If unsure, use 0.
+
 Response format:
 {
   "items": [
@@ -37,7 +39,8 @@ Response format:
       "impact": "high|medium|low",
       "difficulty": "diy|easy_install|professional",
       "reasoning": "Why this helps based on the analysis",
-      "visualizationPrompt": "Describe ONLY the change. Explicitly say to keep everything else in the room identical."
+      "visualizationPrompt": "Describe ONLY the change. Explicitly say to keep everything else in the room identical.",
+      "suggestedPhotoIndex": 0
     }
   ],
   "summary": "Brief overview of the recommendations"
@@ -48,6 +51,8 @@ const TRANSFORMATIONS_PROMPT = `Generate 2-4 "transformation" recommendations:
 - Effort: May require professional help
 - Impact: Significant room improvement
 - Types: Furniture pieces, light fixtures, layout changes, paint, flooring
+
+The room has multiple photos (indexed 0, 1, 2...). For each recommendation, specify "suggestedPhotoIndex" — the index of the photo that best shows the area this recommendation targets. Use the photo descriptions from the analysis to pick the most relevant photo. If unsure, use 0.
 
 Response format:
 {
@@ -61,7 +66,8 @@ Response format:
       "impact": "high|medium|low",
       "difficulty": "diy|easy_install|professional",
       "reasoning": "Why this helps based on the analysis",
-      "visualizationPrompt": "Describe ONLY the change. Explicitly say to keep everything else in the room identical."
+      "visualizationPrompt": "Describe ONLY the change. Explicitly say to keep everything else in the room identical.",
+      "suggestedPhotoIndex": 0
     }
   ],
   "summary": "Brief overview of the recommendations"
@@ -116,19 +122,26 @@ export const generateRecommendations = internalAction({
 
       const recommendations = JSON.parse(content);
 
+      // Map suggestedPhotoIndex to actual storage IDs
+      const photos = room.photos ?? [];
       await ctx.runMutation(internal.recommendations.save, {
         id: args.recommendationId,
-        items: recommendations.items.map((item: Record<string, unknown>, index: number) => ({
-          id: item.id || `${args.tier}-${index}`,
-          title: item.title,
-          description: item.description,
-          category: item.category,
-          estimatedCost: item.estimatedCost,
-          impact: item.impact,
-          difficulty: item.difficulty,
-          reasoning: item.reasoning,
-          visualizationPrompt: item.visualizationPrompt,
-        })),
+        items: recommendations.items.map((item: Record<string, unknown>, index: number) => {
+          const photoIndex = typeof item.suggestedPhotoIndex === "number" ? item.suggestedPhotoIndex : 0;
+          const suggestedPhoto = photos[photoIndex] ?? photos[0];
+          return {
+            id: item.id || `${args.tier}-${index}`,
+            title: item.title,
+            description: item.description,
+            category: item.category,
+            estimatedCost: item.estimatedCost,
+            impact: item.impact,
+            difficulty: item.difficulty,
+            reasoning: item.reasoning,
+            visualizationPrompt: item.visualizationPrompt,
+            suggestedPhotoStorageId: suggestedPhoto?.storageId,
+          };
+        }),
         summary: recommendations.summary,
       });
     } catch (error) {
@@ -147,11 +160,13 @@ interface AnalysisResults {
   colors: { dominant: string[]; accents: string[]; palette: string };
   layout: { flow: string; focalPoint?: string; issues: string[] };
   style: { detected: string; confidence: number; elements: string[] };
+  photoDescriptions?: string[];
 }
 
 interface Room {
   name: string;
   type: string;
+  photos: { storageId: string; url: string; uploadedAt: number }[];
   dimensions?: { width: number; length: number; height?: number; unit: string };
   notes?: string;
 }
@@ -182,7 +197,15 @@ ${JSON.stringify(analysis, null, 2)}
 
 ## Room Details
 - Name: ${room.name}
-- Type: ${room.type}`;
+- Type: ${room.type}
+- Number of photos: ${room.photos.length}`;
+
+  if (analysis.photoDescriptions && analysis.photoDescriptions.length > 0) {
+    context += `\n\n## Photo Descriptions`;
+    analysis.photoDescriptions.forEach((desc: string, i: number) => {
+      context += `\n- Photo ${i}: ${desc}`;
+    });
+  }
 
   if (room.dimensions) {
     context += `\n- Dimensions: ${room.dimensions.width}x${room.dimensions.length} ${room.dimensions.unit}`;

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { X, ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 import { IMPACT_COLORS, DIFFICULTY_LABELS } from "@/lib/constants";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function RoomPage() {
   const params = useParams();
@@ -58,6 +59,7 @@ export default function RoomPage() {
     id: string;
     prompt?: string;
   } | null>(null);
+  const [selectedPhotoStorageId, setSelectedPhotoStorageId] = useState<Id<"_storage"> | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("recommendations");
   const defaultVisualizationPrompt =
@@ -93,10 +95,6 @@ export default function RoomPage() {
     setUploading(true);
     setUploadProgress({ current: 0, total: files.length });
 
-    const existingPhotos = room?.photos ?? [];
-    let primaryAssigned = existingPhotos.some((photo) => photo.isPrimary);
-    let successfulUploads = 0;
-
     try {
       for (let index = 0; index < files.length; index++) {
         const file = files[index];
@@ -113,18 +111,11 @@ export default function RoomPage() {
           }
 
           const { storageId } = await response.json();
-          const shouldSetPrimary = !primaryAssigned && successfulUploads === 0;
 
           await addPhoto({
             roomId,
             storageId,
-            isPrimary: shouldSetPrimary,
           });
-
-          successfulUploads += 1;
-          if (shouldSetPrimary) {
-            primaryAssigned = true;
-          }
         } catch (error) {
           console.error(`Upload failed for ${file.name}:`, error);
         } finally {
@@ -178,10 +169,12 @@ export default function RoomPage() {
         roomId,
         prompt: selectedRecItem?.prompt || visualizationPrompt,
         type: "full_render",
+        photoStorageId: selectedPhotoStorageId ?? undefined,
       });
       setShowVisDialog(false);
       setVisualizationPrompt("");
       setSelectedRecItem(null);
+      setSelectedPhotoStorageId(null);
       setActiveTab("visualizations");
     } catch (error) {
       console.error("Visualization failed:", error);
@@ -191,7 +184,7 @@ export default function RoomPage() {
   if (room === undefined || project === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-slate-500">Loading...</p>
+        <p className="text-text-tertiary">Loading...</p>
       </div>
     );
   }
@@ -235,33 +228,36 @@ export default function RoomPage() {
       : "secondary";
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-surface-page">
       {/* Header */}
-      <header className="bg-white border-b">
+      <header className="bg-surface-elevated border-b">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/project/${projectId}`}
-              className="text-slate-500 hover:text-slate-900"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link
+                href={`/project/${projectId}`}
+                className="text-text-tertiary hover:text-text-primary"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </Link>
-            <div>
-              <p className="text-sm text-slate-500">{project.name}</p>
-              <h1 className="text-2xl font-bold">{room.name}</h1>
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </Link>
+              <div>
+                <p className="text-sm text-text-tertiary">{project.name}</p>
+                <h1 className="text-2xl font-bold">{room.name}</h1>
+              </div>
             </div>
+            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -299,10 +295,10 @@ export default function RoomPage() {
               <CardContent>
                 {room.photos.length === 0 ? (
                   <div
-                    className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center cursor-pointer hover:bg-slate-200 transition-colors"
+                    className="aspect-video bg-surface-inset rounded-lg flex items-center justify-center cursor-pointer hover:bg-muted transition-colors"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <div className="text-center text-slate-400">
+                    <div className="text-center text-text-quaternary">
                       <svg
                         className="w-12 h-12 mx-auto mb-2"
                         fill="none"
@@ -320,61 +316,76 @@ export default function RoomPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {/* Primary Photo */}
-                    <div className="aspect-video bg-slate-100 rounded-lg overflow-hidden relative group">
+                  <div className="space-y-2">
+                    {/* First photo shown larger */}
+                    <div className="aspect-video bg-surface-inset rounded-lg overflow-hidden relative group">
                       <img
-                        src={
-                          room.photos.find((p) => p.isPrimary)?.url ||
-                          room.photos[0].url
-                        }
+                        src={room.photos[0].url}
                         alt={room.name}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-2 left-2">
-                        <Badge>Primary</Badge>
-                      </div>
+                      <button
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() =>
+                          removePhoto({
+                            roomId,
+                            storageId: room.photos[0].storageId,
+                          })
+                        }
+                      >
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
                     </div>
-                    {/* Other Photos */}
+                    {/* Remaining photos in grid */}
                     {room.photos.length > 1 && (
                       <div className="grid grid-cols-3 gap-2">
-                        {room.photos
-                          .filter((p) => !p.isPrimary)
-                          .map((photo) => (
-                            <div
-                              key={photo.storageId}
-                              className="aspect-square bg-slate-100 rounded overflow-hidden relative group"
+                        {room.photos.slice(1).map((photo) => (
+                          <div
+                            key={photo.storageId}
+                            className="aspect-square bg-surface-inset rounded overflow-hidden relative group"
+                          >
+                            <img
+                              src={photo.url}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() =>
+                                removePhoto({
+                                  roomId,
+                                  storageId: photo.storageId,
+                                })
+                              }
                             >
-                              <img
-                                src={photo.url}
-                                alt=""
-                                className="w-full h-full object-cover"
-                              />
-                              <button
-                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() =>
-                                  removePhoto({
-                                    roomId,
-                                    storageId: photo.storageId,
-                                  })
-                                }
+                              <svg
+                                className="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
                               >
-                                <svg
-                                  className="w-3 h-3"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-                          ))}
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -392,16 +403,16 @@ export default function RoomPage() {
               </CardHeader>
               <CardContent>
                 {analysis === undefined ? (
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-text-tertiary">
                     Checking analysis status...
                   </p>
                 ) : analysis === null ? (
-                  <p className="text-sm text-slate-500">
-                    No analysis yet. Upload photos and generate when you are ready.
+                  <p className="text-sm text-text-tertiary">
+                    No analysis yet. Upload photos and generate when ready. All photos will be analyzed together.
                   </p>
                 ) : analysis.status === "processing" || analysis.status === "pending" ? (
                   <div className="space-y-2">
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-text-tertiary">
                       {analysis.status === "pending"
                         ? "Queued for analysis..."
                         : "Analyzing your room..."}
@@ -425,7 +436,7 @@ export default function RoomPage() {
                         {analysis.results.colors.dominant.map((color, i) => (
                           <span
                             key={i}
-                            className="px-2 py-0.5 bg-slate-100 rounded text-xs"
+                            className="px-2 py-0.5 bg-surface-inset rounded text-xs"
                           >
                             {color}
                           </span>
@@ -437,7 +448,7 @@ export default function RoomPage() {
                       <p className="capitalize">
                         {analysis.results.lighting.natural} natural light
                       </p>
-                      <p className="text-slate-500">
+                      <p className="text-text-tertiary">
                         {analysis.results.lighting.assessment}
                       </p>
                     </div>
@@ -449,7 +460,7 @@ export default function RoomPage() {
                         {analysis.results.furniture.map((item, i) => (
                           <span
                             key={i}
-                            className="px-2 py-0.5 bg-slate-100 rounded text-xs"
+                            className="px-2 py-0.5 bg-surface-inset rounded text-xs"
                           >
                             {item.item}
                           </span>
@@ -458,7 +469,7 @@ export default function RoomPage() {
                     </div>
                   </div>
                 ) : analysis.status === "failed" ? (
-                  <p className="text-red-500 text-sm">{analysis.error}</p>
+                  <p className="text-destructive text-sm">{analysis.error}</p>
                 ) : null}
                 <Button
                   className="mt-4 w-full"
@@ -468,7 +479,7 @@ export default function RoomPage() {
                   {analysisButtonLabel}
                 </Button>
                 {room.photos.length === 0 && (
-                  <p className="text-xs text-slate-500 mt-2">
+                  <p className="text-xs text-text-tertiary mt-2">
                     Add at least one photo to enable analysis.
                   </p>
                 )}
@@ -492,7 +503,7 @@ export default function RoomPage() {
                 {!analysis || analysis.status !== "completed" ? (
                   <Card>
                     <CardContent className="py-12 text-center">
-                      <p className="text-slate-500 mb-4">
+                      <p className="text-text-tertiary mb-4">
                         {!analysis
                           ? "Upload a photo to get started with analysis"
                           : analysis.status === "processing"
@@ -509,7 +520,7 @@ export default function RoomPage() {
                         <CardTitle className="flex items-center justify-between">
                           <div>
                             <span>Quick Wins</span>
-                            <p className="text-sm font-normal text-slate-500">
+                            <p className="text-sm font-normal text-text-tertiary">
                               Budget-friendly changes under $200
                             </p>
                           </div>
@@ -535,6 +546,7 @@ export default function RoomPage() {
                               <RecommendationItem
                                 key={item.id}
                                 item={item}
+                                photos={room.photos}
                                 recommendationId={quickWins._id}
                                 onToggle={toggleSelection}
                                 onVisualize={() => {
@@ -543,6 +555,9 @@ export default function RoomPage() {
                                     prompt: item.visualizationPrompt,
                                   });
                                   setVisualizationPrompt(item.visualizationPrompt || defaultVisualizationPrompt);
+                                  setSelectedPhotoStorageId(
+                                    item.suggestedPhotoStorageId ?? room.photos[0]?.storageId ?? null
+                                  );
                                   setShowVisDialog(true);
                                 }}
                               />
@@ -551,10 +566,10 @@ export default function RoomPage() {
                         ) : quickWins?.status === "generating" ? (
                           <div className="py-8 text-center">
                             <Progress value={50} className="mb-4" />
-                            <p className="text-slate-500">Generating recommendations...</p>
+                            <p className="text-text-tertiary">Generating recommendations...</p>
                           </div>
                         ) : (
-                          <p className="text-slate-500 text-center py-8">
+                          <p className="text-text-tertiary text-center py-8">
                             Click Generate to get quick win recommendations
                           </p>
                         )}
@@ -567,7 +582,7 @@ export default function RoomPage() {
                         <CardTitle className="flex items-center justify-between">
                           <div>
                             <span>Transformations</span>
-                            <p className="text-sm font-normal text-slate-500">
+                            <p className="text-sm font-normal text-text-tertiary">
                               Larger investments $200-$2000
                             </p>
                           </div>
@@ -594,6 +609,7 @@ export default function RoomPage() {
                               <RecommendationItem
                                 key={item.id}
                                 item={item}
+                                photos={room.photos}
                                 recommendationId={transformations._id}
                                 onToggle={toggleSelection}
                                 onVisualize={() => {
@@ -602,6 +618,9 @@ export default function RoomPage() {
                                     prompt: item.visualizationPrompt,
                                   });
                                   setVisualizationPrompt(item.visualizationPrompt || defaultVisualizationPrompt);
+                                  setSelectedPhotoStorageId(
+                                    item.suggestedPhotoStorageId ?? room.photos[0]?.storageId ?? null
+                                  );
                                   setShowVisDialog(true);
                                 }}
                               />
@@ -610,10 +629,10 @@ export default function RoomPage() {
                         ) : transformations?.status === "generating" ? (
                           <div className="py-8 text-center">
                             <Progress value={50} className="mb-4" />
-                            <p className="text-slate-500">Generating recommendations...</p>
+                            <p className="text-text-tertiary">Generating recommendations...</p>
                           </div>
                         ) : (
-                          <p className="text-slate-500 text-center py-8">
+                          <p className="text-text-tertiary text-center py-8">
                             Click Generate to get transformation recommendations
                           </p>
                         )}
@@ -633,6 +652,7 @@ export default function RoomPage() {
                         onClick={() => {
                           setSelectedRecItem(null);
                           setVisualizationPrompt(defaultVisualizationPrompt);
+                          setSelectedPhotoStorageId(room.photos[0]?.storageId ?? null);
                           setShowVisDialog(true);
                         }}
                         disabled={room.photos.length === 0}
@@ -670,17 +690,17 @@ export default function RoomPage() {
                                 </button>
                               </div>
                             ) : vis.status === "processing" ? (
-                              <div className="aspect-video bg-slate-100 flex items-center justify-center">
+                              <div className="aspect-video bg-surface-inset flex items-center justify-center">
                                 <div className="text-center">
                                   <Progress value={50} className="w-32 mb-2" />
-                                  <p className="text-sm text-slate-500">Generating...</p>
+                                  <p className="text-sm text-text-tertiary">Generating...</p>
                                 </div>
                               </div>
                             ) : (
-                              <div className="aspect-video bg-red-50 flex flex-col items-center justify-center px-4 text-center">
-                                <p className="text-sm text-red-500 font-medium">Failed</p>
+                              <div className="aspect-video bg-red-50 dark:bg-red-950/30 flex flex-col items-center justify-center px-4 text-center">
+                                <p className="text-sm text-destructive font-medium">Failed</p>
                                 {vis.error && (
-                                  <p className="text-xs text-red-500 mt-1 line-clamp-3">
+                                  <p className="text-xs text-destructive mt-1 line-clamp-3">
                                     {vis.error}
                                   </p>
                                 )}
@@ -688,7 +708,7 @@ export default function RoomPage() {
                             )}
                             <div className="p-3">
                               <div className="flex items-start justify-between gap-3">
-                                <p className="text-sm text-slate-600 whitespace-pre-wrap break-words">
+                                <p className="text-sm text-text-secondary whitespace-pre-wrap break-words">
                                   {vis.input.prompt}
                                 </p>
                                 <Button
@@ -704,7 +724,7 @@ export default function RoomPage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-slate-500 text-center py-8">
+                      <p className="text-text-tertiary text-center py-8">
                         No visualizations yet. Generate one from recommendations or create a custom one.
                       </p>
                     )}
@@ -723,6 +743,31 @@ export default function RoomPage() {
             <DialogTitle>Generate Visualization</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
+            {room.photos.length > 0 && (
+              <div>
+                <Label>Select base photo</Label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {room.photos.map((photo) => (
+                    <button
+                      key={photo.storageId}
+                      type="button"
+                      className={`aspect-video rounded overflow-hidden border-2 transition-all ${
+                        selectedPhotoStorageId === photo.storageId
+                          ? "border-selection-border ring-2 ring-selection-ring"
+                          : "border-transparent hover:border-border"
+                      }`}
+                      onClick={() => setSelectedPhotoStorageId(photo.storageId)}
+                    >
+                      <img
+                        src={photo.url}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div>
               <Label htmlFor="prompt">Describe only the changes (keep everything else the same)</Label>
               <Input
@@ -735,7 +780,7 @@ export default function RoomPage() {
             <Button
               onClick={handleGenerateVisualization}
               className="w-full"
-              disabled={!visualizationPrompt}
+              disabled={!visualizationPrompt || !selectedPhotoStorageId}
             >
               Generate Visualization
             </Button>
@@ -811,8 +856,10 @@ interface RecommendationItemProps {
     difficulty: "diy" | "easy_install" | "professional";
     reasoning: string;
     visualizationPrompt?: string;
+    suggestedPhotoStorageId?: Id<"_storage">;
     selected?: boolean;
   };
+  photos: { storageId: Id<"_storage">; url: string }[];
   recommendationId: Id<"recommendations">;
   onToggle: (args: { id: Id<"recommendations">; itemId: string; selected: boolean }) => void;
   onVisualize: () => void;
@@ -820,14 +867,19 @@ interface RecommendationItemProps {
 
 function RecommendationItem({
   item,
+  photos,
   recommendationId,
   onToggle,
   onVisualize,
 }: RecommendationItemProps) {
+  const suggestedPhoto = item.suggestedPhotoStorageId
+    ? photos.find((p) => p.storageId === item.suggestedPhotoStorageId)
+    : null;
+
   return (
     <div
       className={`border rounded-lg p-4 ${
-        item.selected ? "border-green-500 bg-green-50" : ""
+        item.selected ? "border-status-success bg-status-success/20" : ""
       }`}
     >
       <div className="flex items-start justify-between mb-2">
@@ -837,8 +889,19 @@ function RecommendationItem({
           <Badge variant="outline">{DIFFICULTY_LABELS[item.difficulty]}</Badge>
         </div>
       </div>
-      <p className="text-sm text-slate-600 mb-2">{item.description}</p>
-      <p className="text-xs text-slate-500 mb-3">{item.reasoning}</p>
+      <div className="flex gap-3 mb-2">
+        {suggestedPhoto && (
+          <img
+            src={suggestedPhoto.url}
+            alt=""
+            className="w-16 h-12 object-cover rounded flex-shrink-0"
+          />
+        )}
+        <div>
+          <p className="text-sm text-text-secondary">{item.description}</p>
+          <p className="text-xs text-text-tertiary mt-1">{item.reasoning}</p>
+        </div>
+      </div>
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">
           ${item.estimatedCost.min} - ${item.estimatedCost.max}

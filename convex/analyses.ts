@@ -41,12 +41,12 @@ export const listByRoom = query({
 export const create = internalMutation({
   args: {
     roomId: v.id("rooms"),
-    photoStorageId: v.id("_storage"),
+    photoStorageIds: v.array(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("analyses", {
       roomId: args.roomId,
-      photoStorageId: args.photoStorageId,
+      photoStorageIds: args.photoStorageIds,
       status: "pending",
       createdAt: Date.now(),
     });
@@ -129,14 +129,13 @@ export const retry = mutation({
   handler: async (ctx, args) => {
     const room = await ctx.db.get(args.roomId);
     if (!room) throw new Error("Room not found");
+    if (room.photos.length === 0) throw new Error("No photos uploaded");
 
-    const primaryPhoto = room.photos.find((p) => p.isPrimary);
-    if (!primaryPhoto) throw new Error("No primary photo found");
+    const photoStorageIds = room.photos.map((p) => p.storageId);
 
-    // Create new analysis
     const analysisId = await ctx.db.insert("analyses", {
       roomId: args.roomId,
-      photoStorageId: primaryPhoto.storageId,
+      photoStorageIds,
       status: "pending",
       createdAt: Date.now(),
     });
@@ -152,7 +151,7 @@ export const generate = mutation({
     if (!room) throw new Error("Room not found");
     if (room.photos.length === 0) throw new Error("No photos uploaded");
 
-    const primaryPhoto = room.photos.find((p) => p.isPrimary) || room.photos[0];
+    const photoStorageIds = room.photos.map((p) => p.storageId);
 
     // Check if there's already a pending or processing analysis
     const existingAnalysis = await ctx.db
@@ -173,7 +172,7 @@ export const generate = mutation({
     // Create new analysis record
     const analysisId = await ctx.db.insert("analyses", {
       roomId: args.roomId,
-      photoStorageId: primaryPhoto.storageId,
+      photoStorageIds,
       status: "pending",
       createdAt: Date.now(),
     });
@@ -181,7 +180,7 @@ export const generate = mutation({
     // Trigger the AI analysis
     await ctx.scheduler.runAfter(0, internal.ai.sceneAnalysis.analyze, {
       roomId: args.roomId,
-      photoStorageId: primaryPhoto.storageId,
+      photoStorageIds,
     });
 
     return analysisId;

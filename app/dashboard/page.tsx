@@ -18,6 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function DashboardPage() {
   const sessionId = useLocalSession();
@@ -74,23 +75,26 @@ export default function DashboardPage() {
   if (!sessionId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-slate-500">Loading...</p>
+        <p className="text-text-tertiary">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-surface-page">
       {/* Header */}
-      <header className="bg-white border-b">
+      <header className="bg-surface-elevated border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-slate-900">
+            <Link href="/" className="text-2xl font-bold text-text-primary">
               Interior Advisor
             </Link>
-            <Link href="/discover">
-              <Button variant="outline">Discover Your Style</Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Link href="/discover">
+                <Button variant="outline">Discover Your Style</Button>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -195,12 +199,12 @@ export default function DashboardPage() {
 
         {projects === undefined ? (
           <div className="text-center py-12">
-            <p className="text-slate-500">Loading projects...</p>
+            <p className="text-text-tertiary">Loading projects...</p>
           </div>
         ) : projects.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
-              <div className="text-slate-400 mb-4">
+              <div className="text-text-quaternary mb-4">
                 <svg
                   className="w-16 h-16 mx-auto"
                   fill="none"
@@ -216,7 +220,7 @@ export default function DashboardPage() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold mb-2">No projects yet</h3>
-              <p className="text-slate-500 mb-4">
+              <p className="text-text-tertiary mb-4">
                 Create your first project to start getting design recommendations
               </p>
               <Button onClick={() => setIsCreateOpen(true)}>
@@ -234,10 +238,10 @@ export default function DashboardPage() {
                     <span
                       className={`text-xs px-2 py-1 rounded-full ${
                         project.status === "active"
-                          ? "bg-green-100 text-green-800"
+                          ? "bg-status-success text-status-success-text"
                           : project.status === "completed"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-yellow-100 text-yellow-800"
+                          ? "bg-status-info text-status-info-text"
+                          : "bg-status-warning text-status-warning-text"
                       }`}
                     >
                       {project.status}
@@ -248,7 +252,7 @@ export default function DashboardPage() {
                   )}
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 text-sm text-slate-600 mb-4">
+                  <div className="space-y-2 text-sm text-text-secondary mb-4">
                     {project.budget && (
                       <p>
                         Budget: ${project.budget.total.toLocaleString()} (${(

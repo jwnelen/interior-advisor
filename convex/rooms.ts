@@ -1,6 +1,5 @@
 import { v } from "convex/values";
 import { query, mutation, internalQuery } from "./_generated/server";
-import { internal } from "./_generated/api";
 
 export const list = query({
   args: { projectId: v.id("projects") },
@@ -117,7 +116,6 @@ export const addPhoto = mutation({
   args: {
     roomId: v.id("rooms"),
     storageId: v.id("_storage"),
-    isPrimary: v.boolean(),
   },
   handler: async (ctx, args) => {
     const room = await ctx.db.get(args.roomId);
@@ -126,19 +124,11 @@ export const addPhoto = mutation({
     const url = await ctx.storage.getUrl(args.storageId);
     if (!url) throw new Error("Failed to get storage URL");
 
-    // If this is primary, unset other primaries
-    let photos = room.photos;
-    if (args.isPrimary) {
-      photos = photos.map((p) => ({ ...p, isPrimary: false }));
-    }
-
-    // Add the new photo
-    photos.push({
+    const photos = [...room.photos, {
       storageId: args.storageId,
       url,
-      isPrimary: args.isPrimary || photos.length === 0,
       uploadedAt: Date.now(),
-    });
+    }];
 
     await ctx.db.patch(args.roomId, {
       photos,
@@ -160,11 +150,6 @@ export const removePhoto = mutation({
 
     const photos = room.photos.filter((p) => p.storageId !== args.storageId);
 
-    // If we removed the primary, make the first one primary
-    if (photos.length > 0 && !photos.some((p) => p.isPrimary)) {
-      photos[0].isPrimary = true;
-    }
-
     await ctx.db.patch(args.roomId, {
       photos,
       updatedAt: Date.now(),
@@ -172,27 +157,6 @@ export const removePhoto = mutation({
 
     // Delete the file from storage
     await ctx.storage.delete(args.storageId);
-  },
-});
-
-export const setPrimaryPhoto = mutation({
-  args: {
-    roomId: v.id("rooms"),
-    storageId: v.id("_storage"),
-  },
-  handler: async (ctx, args) => {
-    const room = await ctx.db.get(args.roomId);
-    if (!room) throw new Error("Room not found");
-
-    const photos = room.photos.map((p) => ({
-      ...p,
-      isPrimary: p.storageId === args.storageId,
-    }));
-
-    await ctx.db.patch(args.roomId, {
-      photos,
-      updatedAt: Date.now(),
-    });
   },
 });
 

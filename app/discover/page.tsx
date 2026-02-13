@@ -10,16 +10,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const STYLE_IMAGES = [
-  { id: "modern", label: "Modern", color: "bg-slate-100" },
-  { id: "scandinavian", label: "Scandinavian", color: "bg-amber-50" },
-  { id: "industrial", label: "Industrial", color: "bg-zinc-200" },
-  { id: "traditional", label: "Traditional", color: "bg-rose-50" },
-  { id: "bohemian", label: "Bohemian", color: "bg-orange-100" },
-  { id: "minimalist", label: "Minimalist", color: "bg-white" },
-  { id: "coastal", label: "Coastal", color: "bg-sky-100" },
-  { id: "midcentury", label: "Mid-Century", color: "bg-amber-100" },
+  { id: "modern", label: "Modern", color: "bg-surface-inset" },
+  { id: "scandinavian", label: "Scandinavian", color: "bg-amber-50 dark:bg-amber-950/30" },
+  { id: "industrial", label: "Industrial", color: "bg-zinc-200 dark:bg-zinc-800" },
+  { id: "traditional", label: "Traditional", color: "bg-rose-50 dark:bg-rose-950/30" },
+  { id: "bohemian", label: "Bohemian", color: "bg-orange-100 dark:bg-orange-950/30" },
+  { id: "minimalist", label: "Minimalist", color: "bg-surface-elevated" },
+  { id: "coastal", label: "Coastal", color: "bg-sky-100 dark:bg-sky-950/30" },
+  { id: "midcentury", label: "Mid-Century", color: "bg-amber-100 dark:bg-amber-950/30" },
 ];
 
 const QUIZ_PAIRS = [
@@ -185,22 +186,25 @@ export default function DiscoverPage() {
   if (!sessionId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-slate-500">Loading...</p>
+        <p className="text-text-tertiary">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-accent-brand-light to-surface-elevated">
       {/* Header */}
       <header className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-slate-900">
+          <Link href="/" className="text-2xl font-bold text-text-primary">
             Interior Advisor
           </Link>
-          <Button variant="ghost" onClick={() => router.push("/dashboard")}>
-            Skip to Dashboard
-          </Button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button variant="ghost" onClick={() => router.push("/dashboard")}>
+              Skip to Dashboard
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -214,7 +218,7 @@ export default function DiscoverPage() {
         {step === "intro" && (
           <div className="max-w-2xl mx-auto text-center">
             <h1 className="text-4xl font-bold mb-6">Discover Your Style</h1>
-            <p className="text-xl text-slate-600 mb-8">
+            <p className="text-xl text-text-secondary mb-8">
               Take a quick quiz to help us understand your design preferences.
               We&apos;ll use this to personalize recommendations for your space.
             </p>
@@ -240,7 +244,7 @@ export default function DiscoverPage() {
                     <div
                       className={`h-48 ${
                         STYLE_IMAGES.find((s) => s.id === option.id)?.color ||
-                        "bg-slate-100"
+                        "bg-surface-inset"
                       } rounded-t-lg flex items-center justify-center`}
                     >
                       <span className="text-4xl">
@@ -261,7 +265,7 @@ export default function DiscoverPage() {
                 </Card>
               ))}
             </div>
-            <p className="text-center text-slate-500 mt-6">
+            <p className="text-center text-text-tertiary mt-6">
               Question {currentQuizIndex + 1} of {QUIZ_PAIRS.length}
             </p>
           </div>
@@ -275,7 +279,7 @@ export default function DiscoverPage() {
             <div className="space-y-8">
               {PREFERENCES.map((pref) => (
                 <div key={pref.id} className="space-y-2">
-                  <div className="flex justify-between text-sm text-slate-600">
+                  <div className="flex justify-between text-sm text-text-secondary">
                     <span>{pref.leftLabel}</span>
                     <span className="font-medium">{pref.label}</span>
                     <span>{pref.rightLabel}</span>
@@ -304,7 +308,7 @@ export default function DiscoverPage() {
             <h2 className="text-2xl font-bold text-center mb-4">
               Select Up to 3 Styles That Inspire You
             </h2>
-            <p className="text-center text-slate-600 mb-8">
+            <p className="text-center text-text-secondary mb-8">
               {moodSelections.length}/3 selected
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -313,7 +317,7 @@ export default function DiscoverPage() {
                   key={style.id}
                   className={`cursor-pointer transition-all ${
                     moodSelections.includes(style.id)
-                      ? "ring-2 ring-purple-500 shadow-lg"
+                      ? "ring-2 ring-accent-brand-ring shadow-lg"
                       : "hover:shadow-md"
                   }`}
                   onClick={() => handleMoodToggle(style.id)}
@@ -323,7 +327,7 @@ export default function DiscoverPage() {
                       className={`h-24 ${style.color} rounded-t-lg flex items-center justify-center`}
                     >
                       {moodSelections.includes(style.id) && (
-                        <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-accent-brand rounded-full flex items-center justify-center">
                           <svg
                             className="w-5 h-5 text-white"
                             fill="currentColor"
@@ -356,9 +360,9 @@ export default function DiscoverPage() {
         {step === "results" && calculatedStyle && (
           <div className="max-w-2xl mx-auto text-center">
             <div className="mb-8">
-              <div className="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-24 h-24 bg-feature-purple rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg
-                  className="w-12 h-12 text-purple-600"
+                  className="w-12 h-12 text-feature-purple-text"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -372,12 +376,12 @@ export default function DiscoverPage() {
                 </svg>
               </div>
               <h1 className="text-3xl font-bold mb-2">Your Style Profile</h1>
-              <h2 className="text-4xl font-bold text-purple-600 mb-4 capitalize">
+              <h2 className="text-4xl font-bold text-accent-brand mb-4 capitalize">
                 {calculatedStyle.primaryStyle}
                 {calculatedStyle.secondaryStyle &&
                   ` with ${calculatedStyle.secondaryStyle} touches`}
               </h2>
-              <p className="text-xl text-slate-600">{calculatedStyle.description}</p>
+              <p className="text-xl text-text-secondary">{calculatedStyle.description}</p>
             </div>
 
             <Card className="mb-8">
@@ -385,14 +389,14 @@ export default function DiscoverPage() {
                 <h3 className="font-semibold mb-4">Style Characteristics</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="text-left">
-                    <span className="text-slate-500">Primary Style:</span>
+                    <span className="text-text-tertiary">Primary Style:</span>
                     <p className="font-medium capitalize">
                       {calculatedStyle.primaryStyle}
                     </p>
                   </div>
                   {calculatedStyle.secondaryStyle && (
                     <div className="text-left">
-                      <span className="text-slate-500">Secondary Style:</span>
+                      <span className="text-text-tertiary">Secondary Style:</span>
                       <p className="font-medium capitalize">
                         {calculatedStyle.secondaryStyle}
                       </p>
