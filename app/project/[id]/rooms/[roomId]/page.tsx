@@ -88,6 +88,39 @@ export default function RoomPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [lightboxIndex, completedVisualizations]);
 
+  const downscaleImage = (file: File, maxDimension = 1536, quality = 0.85): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        const { width, height } = img;
+
+        if (width <= maxDimension && height <= maxDimension) {
+          resolve(file);
+          return;
+        }
+
+        const scale = maxDimension / Math.max(width, height);
+        const newWidth = Math.round(width * scale);
+        const newHeight = Math.round(height * scale);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = newWidth;
+        canvas.height = newHeight;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, newWidth, newHeight);
+
+        canvas.toBlob(
+          (blob) => (blob ? resolve(blob) : reject(new Error("Canvas toBlob failed"))),
+          "image/jpeg",
+          quality,
+        );
+      };
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files ? Array.from(e.target.files) : [];
     if (files.length === 0) return;
@@ -99,11 +132,13 @@ export default function RoomPage() {
       for (let index = 0; index < files.length; index++) {
         const file = files[index];
         try {
+          const resized = await downscaleImage(file);
+
           const uploadUrl = await generateUploadUrl();
           const response = await fetch(uploadUrl, {
             method: "POST",
-            headers: { "Content-Type": file.type },
-            body: file,
+            headers: { "Content-Type": "image/jpeg" },
+            body: resized,
           });
 
           if (!response.ok) {

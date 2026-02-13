@@ -13,14 +13,54 @@ import { Progress } from "@/components/ui/progress";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const STYLE_IMAGES = [
-  { id: "modern", label: "Modern", color: "bg-surface-inset" },
-  { id: "scandinavian", label: "Scandinavian", color: "bg-amber-50 dark:bg-amber-950/30" },
-  { id: "industrial", label: "Industrial", color: "bg-zinc-200 dark:bg-zinc-800" },
-  { id: "traditional", label: "Traditional", color: "bg-rose-50 dark:bg-rose-950/30" },
-  { id: "bohemian", label: "Bohemian", color: "bg-orange-100 dark:bg-orange-950/30" },
-  { id: "minimalist", label: "Minimalist", color: "bg-surface-elevated" },
-  { id: "coastal", label: "Coastal", color: "bg-sky-100 dark:bg-sky-950/30" },
-  { id: "midcentury", label: "Mid-Century", color: "bg-amber-100 dark:bg-amber-950/30" },
+  { 
+    id: "modern", 
+    label: "Modern", 
+    color: "bg-surface-inset",
+    imageUrl: "https://cdn.home-designing.com/wp-content/uploads/2018/01/Sophisticated-home-decor.jpg"
+  },
+  { 
+    id: "scandinavian", 
+    label: "Scandinavian", 
+    color: "bg-amber-50 dark:bg-amber-950/30",
+    imageUrl: "https://media.designcafe.com/wp-content/uploads/2020/11/18133838/scandinavian-interior-design-ideas.jpg"
+  },
+  { 
+    id: "industrial", 
+    label: "Industrial", 
+    color: "bg-zinc-200 dark:bg-zinc-800",
+    imageUrl: "https://images.surferseo.art/73bc365a-35d6-4919-93e4-076cf008385b.jpeg"
+  },
+  { 
+    id: "traditional", 
+    label: "Traditional", 
+    color: "bg-rose-50 dark:bg-rose-950/30",
+    imageUrl: "https://www.decorilla.com/online-decorating/wp-content/uploads/2018/11/traditional-interior-design-feature.jpg"
+  },
+  { 
+    id: "bohemian", 
+    label: "Bohemian", 
+    color: "bg-orange-100 dark:bg-orange-950/30",
+    imageUrl: "https://landmarksarchitects.com/wp-content/uploads/2024/10/modern-bohemian-interior-natural-texture-1032024.jpg"
+  },
+  { 
+    id: "minimalist", 
+    label: "Minimalist", 
+    color: "bg-surface-elevated",
+    imageUrl: "https://res.cloudinary.com/dw4e01qx8/f_auto,q_auto/images/l3xh0uhrqgaxmjwekbvl"
+  },
+  { 
+    id: "coastal", 
+    label: "Coastal", 
+    color: "bg-sky-100 dark:bg-sky-950/30",
+    imageUrl: "https://media.architecturaldigest.com/photos/6410bb0291526c92b3c540ef/16:9/w_6639,h_3734,c_limit/3%20(1).jpg"
+  },
+  { 
+    id: "midcentury", 
+    label: "Mid-Century", 
+    color: "bg-amber-100 dark:bg-amber-950/30",
+    imageUrl: "https://downloads.ctfassets.net/ylqmmgjpbpfw/4nUSTlETtrahuCPthCLTpi/f560c8d7c121c67e74b69ac61e2efc30/Presidents-Day-Spring-Sale-Soto-Chairs-Royale-Blush-T4-430-HERO.jpg?h=720&w=1366&fit=fill&fl=progressive"
+  },
 ];
 
 const QUIZ_PAIRS = [
@@ -59,11 +99,46 @@ const QUIZ_PAIRS = [
 ];
 
 const PREFERENCES = [
-  { id: "comfort", label: "Comfort", leftLabel: "Practical", rightLabel: "Luxurious" },
-  { id: "aesthetics", label: "Style", leftLabel: "Subdued", rightLabel: "Bold" },
-  { id: "minimal", label: "Amount", leftLabel: "Minimal", rightLabel: "Layered" },
-  { id: "cozy", label: "Feeling", leftLabel: "Airy", rightLabel: "Cozy" },
-  { id: "modern", label: "Era", leftLabel: "Contemporary", rightLabel: "Classic" },
+  { 
+    id: "comfort", 
+    label: "Comfort", 
+    leftLabel: "Practical", 
+    rightLabel: "Luxurious",
+    leftImageUrl: "https://images.unsplash.com/photo-1594026112284-02bb6f3352fe?auto=format&fit=crop&q=80&w=400",
+    rightImageUrl: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&q=80&w=400"
+  },
+  { 
+    id: "aesthetics", 
+    label: "Style", 
+    leftLabel: "Subdued", 
+    rightLabel: "Bold",
+    leftImageUrl: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&q=80&w=400",
+    rightImageUrl: "https://images.unsplash.com/photo-1557597774-9d2739f85a76?auto=format&fit=crop&q=80&w=400"
+  },
+  { 
+    id: "minimal", 
+    label: "Amount", 
+    leftLabel: "Minimal", 
+    rightLabel: "Layered",
+    leftImageUrl: "https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&q=80&w=400",
+    rightImageUrl: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=400"
+  },
+  { 
+    id: "cozy", 
+    label: "Feeling", 
+    leftLabel: "Airy", 
+    rightLabel: "Cozy",
+    leftImageUrl: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=400",
+    rightImageUrl: "https://images.unsplash.com/photo-1536376074432-8f258bb71ad0?auto=format&fit=crop&q=80&w=400"
+  },
+  { 
+    id: "modern", 
+    label: "Era", 
+    leftLabel: "Contemporary", 
+    rightLabel: "Classic",
+    leftImageUrl: "https://images.unsplash.com/photo-1481437156560-3205f6a55735?auto=format&fit=crop&q=80&w=400",
+    rightImageUrl: "https://images.unsplash.com/photo-1531835551805-16d864c8d311?auto=format&fit=crop&q=80&w=400"
+  },
 ];
 
 type Step = "intro" | "quiz" | "preferences" | "mood" | "results";
@@ -234,36 +309,35 @@ export default function DiscoverPage() {
               {QUIZ_PAIRS[currentQuizIndex].question}
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
-              {QUIZ_PAIRS[currentQuizIndex].options.map((option) => (
-                <Card
-                  key={option.id}
-                  className="cursor-pointer hover:shadow-lg transition-all hover:scale-105"
-                  onClick={() => handleQuizSelection(option.id)}
-                >
-                  <CardContent className="p-0">
-                    <div
-                      className={`h-48 ${
-                        STYLE_IMAGES.find((s) => s.id === option.id)?.color ||
-                        "bg-surface-inset"
-                      } rounded-t-lg flex items-center justify-center`}
-                    >
-                      <span className="text-4xl">
-                        {option.id === "modern" && "◻"}
-                        {option.id === "traditional" && "🏛"}
-                        {option.id === "minimalist" && "○"}
-                        {option.id === "bohemian" && "🌿"}
-                        {option.id === "scandinavian" && "🌲"}
-                        {option.id === "industrial" && "⚙"}
-                        {option.id === "coastal" && "🌊"}
-                        {option.id === "midcentury" && "◐"}
-                      </span>
-                    </div>
-                    <div className="p-4 text-center">
-                      <h3 className="font-semibold text-lg">{option.label}</h3>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              {QUIZ_PAIRS[currentQuizIndex].options.map((option) => {
+                const styleInfo = STYLE_IMAGES.find((s) => s.id === option.id);
+                return (
+                  <Card
+                    key={option.id}
+                    className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 overflow-hidden"
+                    onClick={() => handleQuizSelection(option.id)}
+                  >
+                    <CardContent className="p-0">
+                      <div className="h-64 relative">
+                        {styleInfo?.imageUrl ? (
+                          <img
+                            src={styleInfo.imageUrl}
+                            alt={option.label}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className={`w-full h-full ${styleInfo?.color || "bg-surface-inset"} flex items-center justify-center`}>
+                            <span className="text-4xl">?</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4 text-center">
+                        <h3 className="font-semibold text-lg">{option.label}</h3>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
             <p className="text-center text-text-tertiary mt-6">
               Question {currentQuizIndex + 1} of {QUIZ_PAIRS.length}
@@ -276,22 +350,36 @@ export default function DiscoverPage() {
             <h2 className="text-2xl font-bold text-center mb-8">
               Fine-tune Your Preferences
             </h2>
-            <div className="space-y-8">
+            <div className="space-y-12">
               {PREFERENCES.map((pref) => (
-                <div key={pref.id} className="space-y-2">
-                  <div className="flex justify-between text-sm text-text-secondary">
-                    <span>{pref.leftLabel}</span>
-                    <span className="font-medium">{pref.label}</span>
-                    <span>{pref.rightLabel}</span>
+                <div key={pref.id} className="space-y-4">
+                  <div className="text-center font-bold text-lg">{pref.label}</div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 space-y-2">
+                      <div className="aspect-video rounded-lg overflow-hidden border">
+                        <img src={pref.leftImageUrl} alt={pref.leftLabel} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="text-center text-sm font-medium">{pref.leftLabel}</div>
+                    </div>
+                    
+                    <div className="flex-[2] px-4">
+                      <Slider
+                        value={[preferences[pref.id as keyof typeof preferences]]}
+                        onValueChange={([value]) =>
+                          setPreferences({ ...preferences, [pref.id]: value })
+                        }
+                        max={100}
+                        step={1}
+                      />
+                    </div>
+
+                    <div className="flex-1 space-y-2">
+                      <div className="aspect-video rounded-lg overflow-hidden border">
+                        <img src={pref.rightImageUrl} alt={pref.rightLabel} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="text-center text-sm font-medium">{pref.rightLabel}</div>
+                    </div>
                   </div>
-                  <Slider
-                    value={[preferences[pref.id as keyof typeof preferences]]}
-                    onValueChange={([value]) =>
-                      setPreferences({ ...preferences, [pref.id]: value })
-                    }
-                    max={100}
-                    step={1}
-                  />
                 </div>
               ))}
             </div>
@@ -315,7 +403,7 @@ export default function DiscoverPage() {
               {STYLE_IMAGES.map((style) => (
                 <Card
                   key={style.id}
-                  className={`cursor-pointer transition-all ${
+                  className={`cursor-pointer transition-all overflow-hidden ${
                     moodSelections.includes(style.id)
                       ? "ring-2 ring-accent-brand-ring shadow-lg"
                       : "hover:shadow-md"
@@ -323,22 +411,27 @@ export default function DiscoverPage() {
                   onClick={() => handleMoodToggle(style.id)}
                 >
                   <CardContent className="p-0">
-                    <div
-                      className={`h-24 ${style.color} rounded-t-lg flex items-center justify-center`}
-                    >
+                    <div className="h-32 relative">
+                      <img 
+                        src={style.imageUrl} 
+                        alt={style.label} 
+                        className="w-full h-full object-cover"
+                      />
                       {moodSelections.includes(style.id) && (
-                        <div className="w-8 h-8 bg-accent-brand rounded-full flex items-center justify-center">
-                          <svg
-                            className="w-5 h-5 text-white"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
+                        <div className="absolute inset-0 bg-accent-brand/20 flex items-center justify-center">
+                          <div className="w-8 h-8 bg-accent-brand rounded-full flex items-center justify-center shadow-lg">
+                            <svg
+                              className="w-5 h-5 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </div>
                         </div>
                       )}
                     </div>
