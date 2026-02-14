@@ -31,13 +31,11 @@ export const save = mutation({
     }),
   },
   handler: async (ctx, args) => {
-    // Check if there's an existing response
     const existing = await ctx.db
       .query("styleQuizResponses")
       .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
       .first();
 
-    // Calculate style based on responses
     const calculatedStyle = calculateStyle(
       args.responses,
       args.preferences,
@@ -110,7 +108,7 @@ function calculateStyle(
   preferences: Preferences,
   moodBoardSelections: string[]
 ): CalculatedStyle {
-  // Style scoring based on preferences
+  // Style scoring based on preference slider values
   const styleScores: Record<string, number> = {
     modern: preferences.modern + (100 - preferences.traditional) + preferences.minimal,
     scandinavian: preferences.minimal + preferences.modern + preferences.cozy,
@@ -122,7 +120,6 @@ function calculateStyle(
     midcentury: preferences.modern + preferences.aesthetics + preferences.cozy / 2,
   };
 
-  // Add scores from quiz responses
   responses.forEach((response) => {
     const style = response.selectedOption.toLowerCase();
     if (styleScores[style] !== undefined) {
@@ -136,7 +133,6 @@ function calculateStyle(
     }
   });
 
-  // Find top two styles
   const sortedStyles = Object.entries(styleScores)
     .sort(([, a], [, b]) => b - a);
 
@@ -207,7 +203,6 @@ function deriveColorPreferences(
 
   addPalette(primaryStyle);
   addPalette(secondaryStyle);
-
   moodBoardSelections.forEach((style) => addPalette(style));
 
   if (palettes.size === 0) {

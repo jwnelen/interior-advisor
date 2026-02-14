@@ -6,10 +6,10 @@ import { internal } from "../_generated/api";
 import OpenAI from "openai";
 
 const ADVISOR_SYSTEM_PROMPT = `You are an expert interior designer providing actionable recommendations to improve a room.
-You have been given an analysis of a room photo and user preferences/constraints.
+You have been given an analysis of a room photo and user preferences.
 
 Generate specific, practical recommendations that:
-1. Respect the user's budget and constraints
+1. Respect the user's budget
 2. Build on the existing style or transition to their preferred style
 3. Address identified issues in the room
 4. Are easy to understand and implement
@@ -82,28 +82,21 @@ export const generateRecommendations = internalAction({
   },
   handler: async (ctx, args) => {
     try {
-      // Get analysis results
       const analysis = await ctx.runQuery(internal.analyses.get, { id: args.analysisId });
       if (!analysis || !analysis.results) {
         throw new Error("Analysis not found or incomplete");
       }
 
-      // Get room details
       const room = await ctx.runQuery(internal.rooms.get, { id: args.roomId });
       if (!room) {
         throw new Error("Room not found");
       }
 
-      // Get project for constraints and style
       const project = await ctx.runQuery(internal.projects.get, { id: room.projectId });
-
-      // Build context
       const context = buildContext(analysis.results, room, project);
       const tierPrompt = args.tier === "quick_wins" ? QUICK_WINS_PROMPT : TRANSFORMATIONS_PROMPT;
 
-      const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
@@ -179,12 +172,6 @@ interface Project {
     priorities: string[];
   };
   budget?: { total: number; spent: number; currency: string };
-  constraints?: {
-    rentalFriendly: boolean;
-    petFriendly: boolean;
-    childFriendly: boolean;
-    mobilityAccessible: boolean;
-  };
 }
 
 function buildContext(
@@ -235,23 +222,6 @@ ${JSON.stringify(analysis, null, 2)}
     context += `\n
 ## Budget
 - Remaining: ${project.budget.currency} ${remaining}`;
-  }
-
-  if (project?.constraints) {
-    context += `\n
-## Constraints`;
-    if (project.constraints.rentalFriendly) {
-      context += "\n- Rental Friendly: Yes - no permanent modifications allowed";
-    }
-    if (project.constraints.petFriendly) {
-      context += "\n- Pet Friendly: Yes - durable, easy-clean materials preferred";
-    }
-    if (project.constraints.childFriendly) {
-      context += "\n- Child Friendly: Yes - safe designs, rounded edges preferred";
-    }
-    if (project.constraints.mobilityAccessible) {
-      context += "\n- Mobility Accessible: Yes - consider accessibility needs";
-    }
   }
 
   return context;

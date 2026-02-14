@@ -17,13 +17,6 @@ export interface Project {
     colorPreferences: string[];
     priorities: string[];
   };
-  constraints?: {
-    rentalFriendly: boolean;
-    petFriendly: boolean;
-    childFriendly: boolean;
-    mobilityAccessible: boolean;
-  };
-  status: "discovery" | "active" | "completed";
   createdAt: number;
   updatedAt: number;
 }

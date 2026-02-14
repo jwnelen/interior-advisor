@@ -12,35 +12,12 @@ export const getByRoom = query({
   },
 });
 
-export const getByTier = query({
-  args: {
-    roomId: v.id("rooms"),
-    tier: v.union(v.literal("quick_wins"), v.literal("transformations")),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("recommendations")
-      .withIndex("by_tier", (q) =>
-        q.eq("roomId", args.roomId).eq("tier", args.tier)
-      )
-      .first();
-  },
-});
-
-export const get = query({
-  args: { id: v.id("recommendations") },
-  handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
-  },
-});
-
 export const generate = mutation({
   args: {
     roomId: v.id("rooms"),
     tier: v.union(v.literal("quick_wins"), v.literal("transformations")),
   },
   handler: async (ctx, args) => {
-    // Get the latest completed analysis for this room
     const analysis = await ctx.db
       .query("analyses")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -52,7 +29,6 @@ export const generate = mutation({
       throw new Error("No completed analysis found for this room");
     }
 
-    // Check if we already have recommendations for this tier
     const existing = await ctx.db
       .query("recommendations")
       .withIndex("by_tier", (q) =>
@@ -64,7 +40,6 @@ export const generate = mutation({
       return existing._id;
     }
 
-    // Create or update recommendation record
     let recommendationId;
     if (existing) {
       await ctx.db.patch(existing._id, { status: "generating" });
@@ -80,7 +55,6 @@ export const generate = mutation({
       });
     }
 
-    // Trigger AI generation
     await ctx.scheduler.runAfter(0, internal.ai.advisor.generateRecommendations, {
       roomId: args.roomId,
       analysisId: analysis._id,

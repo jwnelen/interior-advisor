@@ -84,12 +84,10 @@ export const remove = mutation({
     const room = await ctx.db.get(args.id);
     if (!room) return;
 
-    // Delete room photos from storage
     for (const photo of room.photos) {
       await ctx.storage.delete(photo.storageId);
     }
 
-    // Delete associated analyses
     const analyses = await ctx.db
       .query("analyses")
       .withIndex("by_room", (q) => q.eq("roomId", args.id))
@@ -98,7 +96,6 @@ export const remove = mutation({
       await ctx.db.delete(analysis._id);
     }
 
-    // Delete associated recommendations
     const recommendations = await ctx.db
       .query("recommendations")
       .withIndex("by_room", (q) => q.eq("roomId", args.id))
@@ -107,7 +104,6 @@ export const remove = mutation({
       await ctx.db.delete(rec._id);
     }
 
-    // Delete associated visualizations
     const visualizations = await ctx.db
       .query("visualizations")
       .withIndex("by_room", (q) => q.eq("roomId", args.id))
@@ -166,7 +162,6 @@ export const removePhoto = mutation({
       updatedAt: Date.now(),
     });
 
-    // Delete the file from storage
     await ctx.storage.delete(args.storageId);
   },
 });

@@ -14,6 +14,9 @@ export default function LandingPage() {
           <h1 className="text-2xl font-bold text-text-primary">Interior Advisor</h1>
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            <Link href="/style">
+              <Button variant="ghost">My Style</Button>
+            </Link>
             <Link href="/dashboard">
               <Button variant="outline">My Projects</Button>
             </Link>
@@ -143,7 +146,7 @@ export default function LandingPage() {
               {
                 step: "2",
                 title: "Create a Project",
-                description: "Set your budget and constraints for your space",
+                description: "Set your budget and goals for your space",
               },
               {
                 step: "3",

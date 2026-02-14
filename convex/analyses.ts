@@ -20,24 +20,6 @@ export const get = internalQuery({
   },
 });
 
-export const getPublic = query({
-  args: { id: v.id("analyses") },
-  handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
-  },
-});
-
-export const listByRoom = query({
-  args: { roomId: v.id("rooms") },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("analyses")
-      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
-      .order("desc")
-      .collect();
-  },
-});
-
 export const create = internalMutation({
   args: {
     roomId: v.id("rooms"),
@@ -124,26 +106,6 @@ export const fail = internalMutation({
   },
 });
 
-export const retry = mutation({
-  args: { roomId: v.id("rooms") },
-  handler: async (ctx, args) => {
-    const room = await ctx.db.get(args.roomId);
-    if (!room) throw new Error("Room not found");
-    if (room.photos.length === 0) throw new Error("No photos uploaded");
-
-    const photoStorageIds = room.photos.map((p) => p.storageId);
-
-    const analysisId = await ctx.db.insert("analyses", {
-      roomId: args.roomId,
-      photoStorageIds,
-      status: "pending",
-      createdAt: Date.now(),
-    });
-
-    return analysisId;
-  },
-});
-
 export const generate = mutation({
   args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {
@@ -153,7 +115,6 @@ export const generate = mutation({
 
     const photoStorageIds = room.photos.map((p) => p.storageId);
 
-    // Check if there's already a pending or processing analysis
     const existingAnalysis = await ctx.db
       .query("analyses")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -169,7 +130,6 @@ export const generate = mutation({
       return existingAnalysis._id;
     }
 
-    // Create new analysis record
     const analysisId = await ctx.db.insert("analyses", {
       roomId: args.roomId,
       photoStorageIds,
@@ -177,7 +137,6 @@ export const generate = mutation({
       createdAt: Date.now(),
     });
 
-    // Trigger the AI analysis
     await ctx.scheduler.runAfter(0, internal.ai.sceneAnalysis.analyze, {
       roomId: args.roomId,
       photoStorageIds,

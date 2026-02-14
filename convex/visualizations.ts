@@ -13,13 +13,6 @@ export const getByRoom = query({
   },
 });
 
-export const get = query({
-  args: { id: v.id("visualizations") },
-  handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
-  },
-});
-
 export const generate = mutation({
   args: {
     roomId: v.id("rooms"),
@@ -39,7 +32,6 @@ export const generate = mutation({
     const room = await ctx.db.get(args.roomId);
     if (!room) throw new Error("Room not found");
 
-    // Use the explicitly provided photo, or fall back to first photo
     const chosenStorageId = args.photoStorageId ?? room.photos[0]?.storageId;
     if (!chosenStorageId) throw new Error("No photo available for visualization");
 
@@ -57,7 +49,6 @@ export const generate = mutation({
       createdAt: Date.now(),
     });
 
-    // Trigger AI generation
     await ctx.scheduler.runAfter(0, internal.ai.imageGeneration.generateVisualization, {
       visualizationId,
       roomId: args.roomId,
@@ -69,39 +60,6 @@ export const generate = mutation({
     });
 
     return visualizationId;
-  },
-});
-
-export const create = internalMutation({
-  args: {
-    roomId: v.id("rooms"),
-    recommendationId: v.optional(v.id("recommendations")),
-    originalPhotoId: v.id("_storage"),
-    type: v.union(
-      v.literal("full_render"),
-      v.literal("item_change"),
-      v.literal("color_change"),
-      v.literal("style_transfer")
-    ),
-    input: v.object({
-      prompt: v.string(),
-      negativePrompt: v.optional(v.string()),
-      controlNetMode: v.string(),
-      strength: v.number(),
-      seed: v.optional(v.number()),
-    }),
-    status: v.string(),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db.insert("visualizations", {
-      roomId: args.roomId,
-      recommendationId: args.recommendationId,
-      originalPhotoId: args.originalPhotoId,
-      status: args.status as "queued" | "processing" | "completed" | "failed",
-      type: args.type,
-      input: args.input,
-      createdAt: Date.now(),
-    });
   },
 });
 

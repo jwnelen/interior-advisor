@@ -18,22 +18,10 @@ export default defineSchema({
       colorPreferences: v.array(v.string()),
       priorities: v.array(v.string()),
     })),
-    constraints: v.optional(v.object({
-      rentalFriendly: v.boolean(),
-      petFriendly: v.boolean(),
-      childFriendly: v.boolean(),
-      mobilityAccessible: v.boolean(),
-    })),
-    status: v.union(
-      v.literal("discovery"),
-      v.literal("active"),
-      v.literal("completed")
-    ),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_session", ["sessionId"])
-    .index("by_status", ["sessionId", "status"]),
+    .index("by_session", ["sessionId"]),
 
   // Individual rooms within a project
   rooms: defineTable({

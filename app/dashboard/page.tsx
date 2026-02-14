@@ -34,9 +34,6 @@ export default function DashboardPage() {
     name: "",
     description: "",
     budget: "",
-    rentalFriendly: false,
-    petFriendly: false,
-    childFriendly: false,
   });
 
   const handleCreateProject = async () => {
@@ -53,21 +50,12 @@ export default function DashboardPage() {
             currency: "USD",
           }
         : undefined,
-      constraints: {
-        rentalFriendly: newProject.rentalFriendly,
-        petFriendly: newProject.petFriendly,
-        childFriendly: newProject.childFriendly,
-        mobilityAccessible: false,
-      },
     });
 
     setNewProject({
       name: "",
       description: "",
       budget: "",
-      rentalFriendly: false,
-      petFriendly: false,
-      childFriendly: false,
     });
     setIsCreateOpen(false);
   };
@@ -91,6 +79,9 @@ export default function DashboardPage() {
             </Link>
             <div className="flex items-center gap-2">
               <ThemeToggle />
+              <Link href="/style">
+                <Button variant="ghost">My Style</Button>
+              </Link>
               <Link href="/discover">
                 <Button variant="outline">Discover Your Style</Button>
               </Link>
@@ -145,50 +136,6 @@ export default function DashboardPage() {
                     }
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Constraints</Label>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant={newProject.rentalFriendly ? "default" : "outline"}
-                      size="sm"
-                      onClick={() =>
-                        setNewProject({
-                          ...newProject,
-                          rentalFriendly: !newProject.rentalFriendly,
-                        })
-                      }
-                    >
-                      Rental Friendly
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={newProject.petFriendly ? "default" : "outline"}
-                      size="sm"
-                      onClick={() =>
-                        setNewProject({
-                          ...newProject,
-                          petFriendly: !newProject.petFriendly,
-                        })
-                      }
-                    >
-                      Pet Friendly
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={newProject.childFriendly ? "default" : "outline"}
-                      size="sm"
-                      onClick={() =>
-                        setNewProject({
-                          ...newProject,
-                          childFriendly: !newProject.childFriendly,
-                        })
-                      }
-                    >
-                      Child Friendly
-                    </Button>
-                  </div>
-                </div>
                 <Button onClick={handleCreateProject} className="w-full">
                   Create Project
                 </Button>
@@ -233,20 +180,7 @@ export default function DashboardPage() {
             {(projects as Project[]).map((project) => (
               <Card key={project._id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>{project.name}</span>
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        project.status === "active"
-                          ? "bg-status-success text-status-success-text"
-                          : project.status === "completed"
-                          ? "bg-status-info text-status-info-text"
-                          : "bg-status-warning text-status-warning-text"
-                      }`}
-                    >
-                      {project.status}
-                    </span>
-                  </CardTitle>
+                  <CardTitle>{project.name}</CardTitle>
                   {project.description && (
                     <CardDescription>{project.description}</CardDescription>
                   )}
