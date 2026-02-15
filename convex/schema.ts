@@ -7,6 +7,7 @@ export default defineSchema({
     sessionId: v.string(),
     name: v.string(),
     description: v.optional(v.string()),
+    status: v.optional(v.string()),
     budget: v.optional(v.object({
       total: v.number(),
       spent: v.number(),
@@ -17,6 +18,12 @@ export default defineSchema({
       secondaryStyle: v.optional(v.string()),
       colorPreferences: v.array(v.string()),
       priorities: v.array(v.string()),
+    })),
+    constraints: v.optional(v.object({
+      rentalFriendly: v.boolean(),
+      petFriendly: v.boolean(),
+      childFriendly: v.boolean(),
+      mobilityAccessible: v.boolean(),
     })),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -99,7 +106,8 @@ export default defineSchema({
     analysisId: v.id("analyses"),
     tier: v.union(
       v.literal("quick_wins"),
-      v.literal("transformations")
+      v.literal("transformations"),
+      v.literal("custom_question")
     ),
     status: v.union(
       v.literal("pending"),
@@ -107,11 +115,13 @@ export default defineSchema({
       v.literal("completed"),
       v.literal("failed")
     ),
+    // For custom questions
+    userQuestion: v.optional(v.string()),
     items: v.array(v.object({
       id: v.string(),
       title: v.string(),
       description: v.string(),
-      category: v.string(),
+      category: v.string(), // decor|lighting|textiles|plants|organization|artwork|rearrangement|paint|furniture|fixtures|flooring|layout
       estimatedCost: v.object({
         min: v.number(),
         max: v.number(),
@@ -178,23 +188,32 @@ export default defineSchema({
   // Style quiz responses for discovery
   styleQuizResponses: defineTable({
     sessionId: v.string(),
-    responses: v.array(v.object({
+    // New structured responses for the 4 key questions
+    emotionalVibe: v.optional(v.string()), // serenity | energy | cozy | order
+    visualAnchor: v.optional(v.string()), // modern | traditional | bohemian | industrial
+    decorDensity: v.optional(v.string()), // purist | curator | collector
+    colorPattern: v.optional(v.string()), // neutral | natural | bold
+    // Legacy fields for backward compatibility
+    responses: v.optional(v.array(v.object({
       questionId: v.string(),
       selectedOption: v.string(),
-    })),
-    moodBoardSelections: v.array(v.string()),
-    preferences: v.object({
+    }))),
+    moodBoardSelections: v.optional(v.array(v.string())),
+    preferences: v.optional(v.object({
       comfort: v.number(),
       aesthetics: v.number(),
       minimal: v.number(),
       cozy: v.number(),
       modern: v.number(),
       traditional: v.number(),
-    }),
+    })),
     calculatedStyle: v.optional(v.object({
       primaryStyle: v.string(),
       secondaryStyle: v.optional(v.string()),
       description: v.string(),
+      emotionalVibe: v.optional(v.string()),
+      decorDensity: v.optional(v.string()),
+      colorPattern: v.optional(v.string()),
     })),
     createdAt: v.number(),
     completedAt: v.optional(v.number()),
