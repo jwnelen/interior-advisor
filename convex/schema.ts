@@ -188,32 +188,17 @@ export default defineSchema({
   // Style quiz responses for discovery
   styleQuizResponses: defineTable({
     sessionId: v.string(),
-    // New structured responses for the 4 key questions
     emotionalVibe: v.optional(v.string()), // serenity | energy | cozy | order
     visualAnchor: v.optional(v.string()), // modern | traditional | bohemian | industrial
     decorDensity: v.optional(v.string()), // purist | curator | collector
     colorPattern: v.optional(v.string()), // neutral | natural | bold
-    // Legacy fields for backward compatibility
-    responses: v.optional(v.array(v.object({
-      questionId: v.string(),
-      selectedOption: v.string(),
-    }))),
-    moodBoardSelections: v.optional(v.array(v.string())),
-    preferences: v.optional(v.object({
-      comfort: v.number(),
-      aesthetics: v.number(),
-      minimal: v.number(),
-      cozy: v.number(),
-      modern: v.number(),
-      traditional: v.number(),
-    })),
     calculatedStyle: v.optional(v.object({
       primaryStyle: v.string(),
       secondaryStyle: v.optional(v.string()),
       description: v.string(),
-      emotionalVibe: v.optional(v.string()),
-      decorDensity: v.optional(v.string()),
-      colorPattern: v.optional(v.string()),
+      emotionalVibe: v.string(),
+      decorDensity: v.string(),
+      colorPattern: v.string(),
     })),
     createdAt: v.number(),
     completedAt: v.optional(v.number()),

@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
-  STYLE_IMAGES,
   STYLE_DESCRIPTIONS,
   STYLE_COLOR_PALETTES,
   COLOR_HEX_MAP,
@@ -83,111 +82,86 @@ export default function StylePage() {
             </Link>
           </div>
         ) : (
-          /* Full style profile */
+          /* Style profile */
           <div className="max-w-3xl mx-auto space-y-10">
             {/* Title & style summary */}
             <div className="text-center">
               <h1 className="text-3xl font-bold mb-2">Your Style Profile</h1>
               <h2 className="text-2xl font-semibold text-accent-brand capitalize mb-2">
                 {style.primaryStyle}
-                {style.secondaryStyle &&
-                  ` × ${style.secondaryStyle}`}
+                {style.secondaryStyle && ` × ${style.secondaryStyle}`}
               </h2>
               <p className="text-text-secondary text-lg">
                 {style.description || STYLE_DESCRIPTIONS[style.primaryStyle]}
               </p>
             </div>
 
-            {/* Style DNA (New Quiz Format) */}
-            {(style.emotionalVibe || style.decorDensity || style.colorPattern) && (
-              <section>
-                <h3 className="text-xl font-semibold mb-4">Your Style DNA</h3>
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="grid sm:grid-cols-2 gap-6">
-                      {style.emotionalVibe && (
-                        <div>
-                          <span className="text-text-tertiary text-sm uppercase tracking-wide">
-                            Emotional Vibe
-                          </span>
-                          <p className="font-semibold text-lg capitalize mt-1">
-                            {style.emotionalVibe}
-                          </p>
-                        </div>
-                      )}
-                      {quizData.visualAnchor && (
-                        <div>
-                          <span className="text-text-tertiary text-sm uppercase tracking-wide">
-                            Visual Anchor
-                          </span>
-                          <p className="font-semibold text-lg capitalize mt-1">
-                            {quizData.visualAnchor}
-                          </p>
-                        </div>
-                      )}
-                      {style.decorDensity && (
-                        <div>
-                          <span className="text-text-tertiary text-sm uppercase tracking-wide">
-                            Decor Approach
-                          </span>
-                          <p className="font-semibold text-lg capitalize mt-1">
-                            {style.decorDensity === "purist"
-                              ? "The Purist"
-                              : style.decorDensity === "curator"
-                              ? "The Curator"
-                              : "The Collector"}
-                          </p>
-                        </div>
-                      )}
-                      {style.colorPattern && (
-                        <div>
-                          <span className="text-text-tertiary text-sm uppercase tracking-wide">
-                            Color & Pattern
-                          </span>
-                          <p className="font-semibold text-lg capitalize mt-1">
-                            {style.colorPattern.replace("-", " & ")}
-                          </p>
-                        </div>
-                      )}
+            {/* Style DNA */}
+            <section>
+              <h3 className="text-xl font-semibold mb-4">Your Style DNA</h3>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <div>
+                      <span className="text-text-tertiary text-sm uppercase tracking-wide">
+                        Primary Style
+                      </span>
+                      <p className="font-semibold text-lg capitalize mt-1">
+                        {style.primaryStyle}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              </section>
-            )}
-
-            {/* Mood Board (Legacy or for backward compatibility) */}
-            {quizData.moodBoardSelections && quizData.moodBoardSelections.length > 0 && (
-              <section>
-                <h3 className="text-xl font-semibold mb-4">Mood Board</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {quizData.moodBoardSelections.map((styleId) => {
-                    const styleInfo = STYLE_IMAGES.find(
-                      (s) => s.id === styleId
-                    );
-                    if (!styleInfo) return null;
-
-                    return (
-                      <Card key={styleId} className="overflow-hidden">
-                        <CardContent className="p-0">
-                          <div className="h-32">
-                            <img
-                              src={styleInfo.imageUrl}
-                              alt={styleInfo.label}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="p-3 text-center">
-                            <span className="text-sm font-medium">
-                              {styleInfo.label}
-                            </span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
+                    {style.secondaryStyle && (
+                      <div>
+                        <span className="text-text-tertiary text-sm uppercase tracking-wide">
+                          Secondary Style
+                        </span>
+                        <p className="font-semibold text-lg capitalize mt-1">
+                          {style.secondaryStyle}
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-text-tertiary text-sm uppercase tracking-wide">
+                        Emotional Vibe
+                      </span>
+                      <p className="font-semibold text-lg capitalize mt-1">
+                        {style.emotionalVibe}
+                      </p>
+                    </div>
+                    {quizData.visualAnchor && (
+                      <div>
+                        <span className="text-text-tertiary text-sm uppercase tracking-wide">
+                          Visual Anchor
+                        </span>
+                        <p className="font-semibold text-lg capitalize mt-1">
+                          {quizData.visualAnchor}
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-text-tertiary text-sm uppercase tracking-wide">
+                        Decor Approach
+                      </span>
+                      <p className="font-semibold text-lg capitalize mt-1">
+                        {style.decorDensity === "purist"
+                          ? "The Purist"
+                          : style.decorDensity === "curator"
+                          ? "The Curator"
+                          : "The Collector"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-text-tertiary text-sm uppercase tracking-wide">
+                        Color & Pattern
+                      </span>
+                      <p className="font-semibold text-lg capitalize mt-1">
+                        {style.colorPattern.replace("-", " & ")}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
 
             {/* Color Palette */}
             <section>
