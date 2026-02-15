@@ -8,140 +8,33 @@ import { api } from "@/convex/_generated/api";
 import { useLocalSession } from "@/lib/hooks/use-local-session";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import {
+  EMOTIONAL_VIBE_QUESTION,
+  VISUAL_ANCHOR_QUESTION,
+  DECOR_DENSITY_QUESTION,
+  COLOR_PATTERN_QUESTION,
+  STYLE_DESCRIPTIONS,
+} from "@/lib/style-data";
 
-const STYLE_IMAGES = [
-  { 
-    id: "modern", 
-    label: "Modern", 
-    color: "bg-surface-inset",
-    imageUrl: "https://cdn.home-designing.com/wp-content/uploads/2018/01/Sophisticated-home-decor.jpg"
-  },
-  { 
-    id: "scandinavian", 
-    label: "Scandinavian", 
-    color: "bg-amber-50 dark:bg-amber-950/30",
-    imageUrl: "https://media.designcafe.com/wp-content/uploads/2020/11/18133838/scandinavian-interior-design-ideas.jpg"
-  },
-  { 
-    id: "industrial", 
-    label: "Industrial", 
-    color: "bg-zinc-200 dark:bg-zinc-800",
-    imageUrl: "https://images.surferseo.art/73bc365a-35d6-4919-93e4-076cf008385b.jpeg"
-  },
-  { 
-    id: "traditional", 
-    label: "Traditional", 
-    color: "bg-rose-50 dark:bg-rose-950/30",
-    imageUrl: "https://www.decorilla.com/online-decorating/wp-content/uploads/2018/11/traditional-interior-design-feature.jpg"
-  },
-  { 
-    id: "bohemian", 
-    label: "Bohemian", 
-    color: "bg-orange-100 dark:bg-orange-950/30",
-    imageUrl: "https://landmarksarchitects.com/wp-content/uploads/2024/10/modern-bohemian-interior-natural-texture-1032024.jpg"
-  },
-  { 
-    id: "minimalist", 
-    label: "Minimalist", 
-    color: "bg-surface-elevated",
-    imageUrl: "https://res.cloudinary.com/dw4e01qx8/f_auto,q_auto/images/l3xh0uhrqgaxmjwekbvl"
-  },
-  { 
-    id: "coastal", 
-    label: "Coastal", 
-    color: "bg-sky-100 dark:bg-sky-950/30",
-    imageUrl: "https://media.architecturaldigest.com/photos/6410bb0291526c92b3c540ef/16:9/w_6639,h_3734,c_limit/3%20(1).jpg"
-  },
-  { 
-    id: "midcentury", 
-    label: "Mid-Century", 
-    color: "bg-amber-100 dark:bg-amber-950/30",
-    imageUrl: "https://downloads.ctfassets.net/ylqmmgjpbpfw/4nUSTlETtrahuCPthCLTpi/f560c8d7c121c67e74b69ac61e2efc30/Presidents-Day-Spring-Sale-Soto-Chairs-Royale-Blush-T4-430-HERO.jpg?h=720&w=1366&fit=fill&fl=progressive"
-  },
-];
+type Step = "intro" | "q1" | "q2" | "q3" | "q4" | "results";
 
-const QUIZ_PAIRS = [
-  {
-    id: "q1",
-    question: "Which space feels more like home?",
-    options: [
-      { id: "modern", label: "Clean & Contemporary" },
-      { id: "traditional", label: "Classic & Timeless" },
-    ],
-  },
-  {
-    id: "q2",
-    question: "What atmosphere do you prefer?",
-    options: [
-      { id: "minimalist", label: "Minimal & Calm" },
-      { id: "bohemian", label: "Layered & Eclectic" },
-    ],
-  },
-  {
-    id: "q3",
-    question: "Which materials speak to you?",
-    options: [
-      { id: "scandinavian", label: "Natural Wood & Linen" },
-      { id: "industrial", label: "Metal & Concrete" },
-    ],
-  },
-  {
-    id: "q4",
-    question: "What vibe resonates with you?",
-    options: [
-      { id: "coastal", label: "Relaxed & Breezy" },
-      { id: "midcentury", label: "Retro & Organic" },
-    ],
-  },
-];
+interface QuizResponses {
+  emotionalVibe?: string;
+  visualAnchor?: string;
+  decorDensity?: string;
+  colorPattern?: string;
+}
 
-const PREFERENCES = [
-  { 
-    id: "comfort", 
-    label: "Comfort", 
-    leftLabel: "Practical", 
-    rightLabel: "Luxurious",
-    leftImageUrl: "https://images.unsplash.com/photo-1594026112284-02bb6f3352fe?auto=format&fit=crop&q=80&w=400",
-    rightImageUrl: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&q=80&w=400"
-  },
-  { 
-    id: "aesthetics", 
-    label: "Style", 
-    leftLabel: "Subdued", 
-    rightLabel: "Bold",
-    leftImageUrl: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&q=80&w=400",
-    rightImageUrl: "https://images.unsplash.com/photo-1557597774-9d2739f85a76?auto=format&fit=crop&q=80&w=400"
-  },
-  { 
-    id: "minimal", 
-    label: "Amount", 
-    leftLabel: "Minimal", 
-    rightLabel: "Layered",
-    leftImageUrl: "https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&q=80&w=400",
-    rightImageUrl: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=400"
-  },
-  { 
-    id: "cozy", 
-    label: "Feeling", 
-    leftLabel: "Airy", 
-    rightLabel: "Cozy",
-    leftImageUrl: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=400",
-    rightImageUrl: "https://images.unsplash.com/photo-1536376074432-8f258bb71ad0?auto=format&fit=crop&q=80&w=400"
-  },
-  { 
-    id: "modern", 
-    label: "Era", 
-    leftLabel: "Contemporary", 
-    rightLabel: "Classic",
-    leftImageUrl: "https://images.unsplash.com/photo-1481437156560-3205f6a55735?auto=format&fit=crop&q=80&w=400",
-    rightImageUrl: "https://images.unsplash.com/photo-1531835551805-16d864c8d311?auto=format&fit=crop&q=80&w=400"
-  },
-];
-
-type Step = "intro" | "quiz" | "preferences" | "mood" | "results";
+interface CalculatedStyle {
+  primaryStyle: string;
+  secondaryStyle?: string;
+  description: string;
+  emotionalVibe: string;
+  decorDensity: string;
+  colorPattern: string;
+}
 
 export default function DiscoverPage() {
   const router = useRouter();
@@ -149,110 +42,39 @@ export default function DiscoverPage() {
   const saveQuiz = useMutation(api.styleQuiz.save);
 
   const [step, setStep] = useState<Step>("intro");
-  const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
-  const [responses, setResponses] = useState<{ questionId: string; selectedOption: string }[]>([]);
-  const [preferences, setPreferences] = useState({
-    comfort: 50,
-    aesthetics: 50,
-    minimal: 50,
-    cozy: 50,
-    modern: 50,
-    traditional: 50,
-  });
-  const [moodSelections, setMoodSelections] = useState<string[]>([]);
-  const [calculatedStyle, setCalculatedStyle] = useState<{
-    primaryStyle: string;
-    secondaryStyle?: string;
-    description: string;
-  } | null>(null);
+  const [responses, setResponses] = useState<QuizResponses>({});
+  const [calculatedStyle, setCalculatedStyle] = useState<CalculatedStyle | null>(null);
 
-  const totalSteps = QUIZ_PAIRS.length + 2; // quiz + preferences + mood
-  const currentProgress =
-    step === "intro"
-      ? 0
-      : step === "quiz"
-      ? ((currentQuizIndex + 1) / totalSteps) * 100
-      : step === "preferences"
-      ? ((QUIZ_PAIRS.length + 1) / totalSteps) * 100
-      : step === "mood"
-      ? ((QUIZ_PAIRS.length + 2) / totalSteps) * 100
-      : 100;
+  const totalSteps = 4;
+  const stepOrder: Step[] = ["q1", "q2", "q3", "q4"];
+  const currentStepIndex = stepOrder.indexOf(step);
+  const currentProgress = step === "intro" ? 0 : step === "results" ? 100 : ((currentStepIndex + 1) / totalSteps) * 100;
 
-  const handleQuizSelection = (optionId: string) => {
-    const newResponses = [
-      ...responses,
-      { questionId: QUIZ_PAIRS[currentQuizIndex].id, selectedOption: optionId },
-    ];
+  const handleSelection = (questionId: string, optionId: string) => {
+    const newResponses = { ...responses, [questionId]: optionId };
     setResponses(newResponses);
 
-    if (currentQuizIndex < QUIZ_PAIRS.length - 1) {
-      setCurrentQuizIndex(currentQuizIndex + 1);
-    } else {
-      setStep("preferences");
-    }
+    // Move to next question
+    if (step === "q1") setStep("q2");
+    else if (step === "q2") setStep("q3");
+    else if (step === "q3") setStep("q4");
+    else if (step === "q4") handleComplete(newResponses);
   };
 
-  const handleMoodToggle = (styleId: string) => {
-    setMoodSelections((prev) =>
-      prev.includes(styleId)
-        ? prev.filter((id) => id !== styleId)
-        : prev.length < 3
-        ? [...prev, styleId]
-        : prev
-    );
-  };
-
-  const handleComplete = async () => {
+  const handleComplete = async (finalResponses: QuizResponses) => {
     if (!sessionId) return;
 
+    // Calculate style locally
+    const calculated = calculateStyle(finalResponses);
+    setCalculatedStyle(calculated);
+
+    // Save to backend
     await saveQuiz({
       sessionId,
-      responses,
-      moodBoardSelections: moodSelections,
-      preferences,
-    });
-
-    // Calculate style locally for display
-    const styleScores: Record<string, number> = {
-      modern: preferences.modern + (100 - preferences.traditional) + preferences.minimal,
-      scandinavian: preferences.minimal + preferences.modern + preferences.cozy,
-      industrial: preferences.modern + (100 - preferences.cozy) + preferences.aesthetics,
-      traditional: preferences.traditional + preferences.comfort + (100 - preferences.minimal),
-      bohemian: preferences.cozy + preferences.aesthetics + (100 - preferences.minimal),
-      minimalist: preferences.minimal * 2 + preferences.modern,
-      coastal: preferences.cozy + preferences.comfort + (100 - preferences.modern) / 2,
-      midcentury: preferences.modern + preferences.aesthetics + preferences.cozy / 2,
-    };
-
-    responses.forEach((response) => {
-      if (styleScores[response.selectedOption] !== undefined) {
-        styleScores[response.selectedOption] += 50;
-      }
-    });
-
-    moodSelections.forEach((style) => {
-      if (styleScores[style] !== undefined) {
-        styleScores[style] += 30;
-      }
-    });
-
-    const sortedStyles = Object.entries(styleScores).sort(([, a], [, b]) => b - a);
-
-    const descriptions: Record<string, string> = {
-      modern: "Clean lines, neutral colors, and functional design define your taste",
-      scandinavian: "You prefer light, airy spaces with natural materials and cozy textiles",
-      industrial: "Raw materials, exposed elements, and urban aesthetics appeal to you",
-      traditional: "Classic elegance, rich colors, and timeless furniture suit your style",
-      bohemian: "Eclectic patterns, global influences, and artistic expression inspire you",
-      minimalist: "You believe less is more, with each item serving a purpose",
-      coastal: "Relaxed, breezy vibes with natural textures make you feel at home",
-      midcentury: "Retro charm with organic shapes and functional beauty defines your space",
-    };
-
-    setCalculatedStyle({
-      primaryStyle: sortedStyles[0][0],
-      secondaryStyle: sortedStyles[1]?.[0],
-      description: descriptions[sortedStyles[0][0]],
+      emotionalVibe: finalResponses.emotionalVibe,
+      visualAnchor: finalResponses.visualAnchor,
+      decorDensity: finalResponses.decorDensity,
+      colorPattern: finalResponses.colorPattern,
     });
 
     setStep("results");
@@ -265,6 +87,44 @@ export default function DiscoverPage() {
       </div>
     );
   }
+
+  const renderQuestion = (
+    questionData: typeof EMOTIONAL_VIBE_QUESTION,
+    responseKey: keyof QuizResponses
+  ) => (
+    <div className="max-w-4xl mx-auto">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold mb-3">{questionData.question}</h2>
+        <p className="text-text-tertiary text-sm">
+          Question {currentStepIndex + 1} of {totalSteps}
+        </p>
+      </div>
+      <div className={`grid gap-4 ${questionData.options.length === 4 ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
+        {questionData.options.map((option) => (
+          <Card
+            key={option.id}
+            className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] overflow-hidden group"
+            onClick={() => handleSelection(responseKey, option.id)}
+          >
+            <CardContent className="p-0">
+              <div className="aspect-[4/3] relative overflow-hidden">
+                <img
+                  src={option.imageUrl}
+                  alt={option.label}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div className="p-5">
+                <h3 className="font-bold text-lg mb-2">{option.label}</h3>
+                <p className="text-text-secondary text-sm leading-relaxed">{option.description}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-accent-brand-light to-surface-elevated">
@@ -292,167 +152,44 @@ export default function DiscoverPage() {
       <main className="container mx-auto px-4 py-8">
         {step === "intro" && (
           <div className="max-w-2xl mx-auto text-center">
-            <h1 className="text-4xl font-bold mb-6">Discover Your Style</h1>
-            <p className="text-xl text-text-secondary mb-8">
-              Take a quick quiz to help us understand your design preferences.
-              We&apos;ll use this to personalize recommendations for your space.
-            </p>
-            <Button size="lg" onClick={() => setStep("quiz")}>
-              Start Quiz
+            <div className="mb-8">
+              <div className="w-20 h-20 bg-accent-brand rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg
+                  className="w-10 h-10 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                  />
+                </svg>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">Discover Your Style</h1>
+              <p className="text-xl text-text-secondary mb-2">
+                Answer 4 quick questions to help us understand your design preferences.
+              </p>
+              <p className="text-text-tertiary">
+                We&apos;ll use this to personalize recommendations for your space.
+              </p>
+            </div>
+            <Button size="lg" onClick={() => setStep("q1")} className="px-8">
+              Start Discovery
             </Button>
           </div>
         )}
 
-        {step === "quiz" && (
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold text-center mb-8">
-              {QUIZ_PAIRS[currentQuizIndex].question}
-            </h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {QUIZ_PAIRS[currentQuizIndex].options.map((option) => {
-                const styleInfo = STYLE_IMAGES.find((s) => s.id === option.id);
-                return (
-                  <Card
-                    key={option.id}
-                    className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 overflow-hidden"
-                    onClick={() => handleQuizSelection(option.id)}
-                  >
-                    <CardContent className="p-0">
-                      <div className="h-64 relative">
-                        {styleInfo?.imageUrl ? (
-                          <img
-                            src={styleInfo.imageUrl}
-                            alt={option.label}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className={`w-full h-full ${styleInfo?.color || "bg-surface-inset"} flex items-center justify-center`}>
-                            <span className="text-4xl">?</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-4 text-center">
-                        <h3 className="font-semibold text-lg">{option.label}</h3>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-            <p className="text-center text-text-tertiary mt-6">
-              Question {currentQuizIndex + 1} of {QUIZ_PAIRS.length}
-            </p>
-          </div>
-        )}
-
-        {step === "preferences" && (
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-center mb-8">
-              Fine-tune Your Preferences
-            </h2>
-            <div className="space-y-12">
-              {PREFERENCES.map((pref) => (
-                <div key={pref.id} className="space-y-4">
-                  <div className="text-center font-bold text-lg">{pref.label}</div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1 space-y-2">
-                      <div className="aspect-video rounded-lg overflow-hidden border">
-                        <img src={pref.leftImageUrl} alt={pref.leftLabel} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="text-center text-sm font-medium">{pref.leftLabel}</div>
-                    </div>
-                    
-                    <div className="flex-[2] px-4">
-                      <Slider
-                        value={[preferences[pref.id as keyof typeof preferences]]}
-                        onValueChange={([value]) =>
-                          setPreferences({ ...preferences, [pref.id]: value })
-                        }
-                        max={100}
-                        step={1}
-                      />
-                    </div>
-
-                    <div className="flex-1 space-y-2">
-                      <div className="aspect-video rounded-lg overflow-hidden border">
-                        <img src={pref.rightImageUrl} alt={pref.rightLabel} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="text-center text-sm font-medium">{pref.rightLabel}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-8 text-center">
-              <Button size="lg" onClick={() => setStep("mood")}>
-                Continue
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {step === "mood" && (
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold text-center mb-4">
-              Select Up to 3 Styles That Inspire You
-            </h2>
-            <p className="text-center text-text-secondary mb-8">
-              {moodSelections.length}/3 selected
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {STYLE_IMAGES.map((style) => (
-                <Card
-                  key={style.id}
-                  className={`cursor-pointer transition-all overflow-hidden ${
-                    moodSelections.includes(style.id)
-                      ? "ring-2 ring-accent-brand-ring shadow-lg"
-                      : "hover:shadow-md"
-                  }`}
-                  onClick={() => handleMoodToggle(style.id)}
-                >
-                  <CardContent className="p-0">
-                    <div className="h-32 relative">
-                      <img 
-                        src={style.imageUrl} 
-                        alt={style.label} 
-                        className="w-full h-full object-cover"
-                      />
-                      {moodSelections.includes(style.id) && (
-                        <div className="absolute inset-0 bg-accent-brand/20 flex items-center justify-center">
-                          <div className="w-8 h-8 bg-accent-brand rounded-full flex items-center justify-center shadow-lg">
-                            <svg
-                              className="w-5 h-5 text-white"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-3 text-center">
-                      <span className="text-sm font-medium">{style.label}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            <div className="mt-8 text-center">
-              <Button size="lg" onClick={handleComplete}>
-                See My Style
-              </Button>
-            </div>
-          </div>
-        )}
+        {step === "q1" && renderQuestion(EMOTIONAL_VIBE_QUESTION, "emotionalVibe")}
+        {step === "q2" && renderQuestion(VISUAL_ANCHOR_QUESTION, "visualAnchor")}
+        {step === "q3" && renderQuestion(DECOR_DENSITY_QUESTION, "decorDensity")}
+        {step === "q4" && renderQuestion(COLOR_PATTERN_QUESTION, "colorPattern")}
 
         {step === "results" && calculatedStyle && (
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="mb-8">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-8">
               <div className="w-24 h-24 bg-feature-purple rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg
                   className="w-12 h-12 text-feature-purple-text"
@@ -468,42 +205,72 @@ export default function DiscoverPage() {
                   />
                 </svg>
               </div>
-              <h1 className="text-3xl font-bold mb-2">Your Style Profile</h1>
-              <h2 className="text-4xl font-bold text-accent-brand mb-4 capitalize">
+              <h1 className="text-3xl font-bold mb-3">Your Style Profile</h1>
+              <h2 className="text-4xl md:text-5xl font-bold text-accent-brand mb-4 capitalize">
                 {calculatedStyle.primaryStyle}
-                {calculatedStyle.secondaryStyle &&
-                  ` with ${calculatedStyle.secondaryStyle} touches`}
+                {calculatedStyle.secondaryStyle && ` × ${calculatedStyle.secondaryStyle}`}
               </h2>
-              <p className="text-xl text-text-secondary">{calculatedStyle.description}</p>
+              <p className="text-xl text-text-secondary leading-relaxed max-w-2xl mx-auto">
+                {calculatedStyle.description}
+              </p>
             </div>
 
             <Card className="mb-8">
-              <CardContent className="p-6">
-                <h3 className="font-semibold mb-4">Style Characteristics</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="text-left">
-                    <span className="text-text-tertiary">Primary Style:</span>
-                    <p className="font-medium capitalize">
-                      {calculatedStyle.primaryStyle}
-                    </p>
+              <CardContent className="p-6 md:p-8">
+                <h3 className="font-bold text-lg mb-6">Your Style DNA</h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <span className="text-text-tertiary text-sm uppercase tracking-wide">Primary Style</span>
+                    <p className="font-semibold text-lg capitalize mt-1">{calculatedStyle.primaryStyle}</p>
                   </div>
                   {calculatedStyle.secondaryStyle && (
-                    <div className="text-left">
-                      <span className="text-text-tertiary">Secondary Style:</span>
-                      <p className="font-medium capitalize">
-                        {calculatedStyle.secondaryStyle}
-                      </p>
+                    <div>
+                      <span className="text-text-tertiary text-sm uppercase tracking-wide">Secondary Style</span>
+                      <p className="font-semibold text-lg capitalize mt-1">{calculatedStyle.secondaryStyle}</p>
                     </div>
                   )}
+                  <div>
+                    <span className="text-text-tertiary text-sm uppercase tracking-wide">Emotional Vibe</span>
+                    <p className="font-semibold text-lg capitalize mt-1">
+                      {responses.emotionalVibe?.replace(/-/g, " ")}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-text-tertiary text-sm uppercase tracking-wide">Decor Approach</span>
+                    <p className="font-semibold text-lg capitalize mt-1">
+                      {responses.decorDensity === "purist"
+                        ? "The Purist"
+                        : responses.decorDensity === "curator"
+                        ? "The Curator"
+                        : "The Collector"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-text-tertiary text-sm uppercase tracking-wide">Color & Pattern</span>
+                    <p className="font-semibold text-lg capitalize mt-1">
+                      {responses.colorPattern?.replace(/-/g, " ")}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <div className="flex gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/dashboard">
-                <Button size="lg">Start a Project</Button>
+                <Button size="lg" className="w-full sm:w-auto">
+                  Start a Project
+                </Button>
               </Link>
-              <Button size="lg" variant="outline" onClick={() => setStep("intro")}>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => {
+                  setStep("intro");
+                  setResponses({});
+                  setCalculatedStyle(null);
+                }}
+                className="w-full sm:w-auto"
+              >
                 Retake Quiz
               </Button>
             </div>
@@ -512,4 +279,74 @@ export default function DiscoverPage() {
       </main>
     </div>
   );
+}
+
+/**
+ * Calculate style based on the 4 key questions
+ */
+function calculateStyle(responses: QuizResponses): CalculatedStyle {
+  const { emotionalVibe = "order", visualAnchor = "modern", decorDensity = "curator", colorPattern = "neutral" } = responses;
+
+  // Primary style comes from Visual Anchor
+  let primaryStyle = visualAnchor;
+
+  // Refine based on other answers
+  const styleModifiers: string[] = [];
+
+  // Emotional Vibe influences
+  if (emotionalVibe === "serenity") {
+    if (visualAnchor === "modern") primaryStyle = "minimalist";
+    else if (visualAnchor === "traditional") primaryStyle = "coastal";
+    styleModifiers.push("scandinavian", "minimalist");
+  } else if (emotionalVibe === "energy") {
+    styleModifiers.push("eclectic", "maximalist");
+  } else if (emotionalVibe === "cozy") {
+    if (visualAnchor === "modern") primaryStyle = "scandinavian";
+    styleModifiers.push("farmhouse", "bohemian");
+  } else if (emotionalVibe === "order") {
+    if (visualAnchor !== "modern") primaryStyle = "modern";
+    styleModifiers.push("minimalist", "modern");
+  }
+
+  // Decor Density influences
+  if (decorDensity === "purist") {
+    if (visualAnchor !== "minimalist") primaryStyle = "minimalist";
+    styleModifiers.push("minimalist", "scandinavian");
+  } else if (decorDensity === "collector") {
+    styleModifiers.push("bohemian", "eclectic", "maximalist");
+  } else {
+    styleModifiers.push("mid-century", "modern");
+  }
+
+  // Color & Pattern influences
+  if (colorPattern === "neutral") {
+    styleModifiers.push("minimalist", "scandinavian");
+  } else if (colorPattern === "natural") {
+    styleModifiers.push("scandinavian", "coastal", "farmhouse");
+  } else if (colorPattern === "bold") {
+    styleModifiers.push("eclectic", "maximalist", "bohemian");
+  }
+
+  // Count style modifier frequencies to determine secondary style
+  const styleCounts: Record<string, number> = {};
+  styleModifiers.forEach((style) => {
+    styleCounts[style] = (styleCounts[style] || 0) + 1;
+  });
+
+  // Get secondary style (most common modifier that's different from primary)
+  const sortedModifiers = Object.entries(styleCounts)
+    .sort(([, a], [, b]) => b - a)
+    .map(([style]) => style);
+  const secondaryStyle = sortedModifiers.find((style) => style !== primaryStyle);
+
+  const description = STYLE_DESCRIPTIONS[primaryStyle] || "A unique blend of styles that reflects your personality.";
+
+  return {
+    primaryStyle,
+    secondaryStyle,
+    description,
+    emotionalVibe,
+    decorDensity,
+    colorPattern,
+  };
 }

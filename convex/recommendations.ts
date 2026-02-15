@@ -12,35 +12,35 @@ export const getByRoom = query({
   },
 });
 
-export const getByTier = query({
-  args: {
-    roomId: v.id("rooms"),
-    tier: v.union(v.literal("quick_wins"), v.literal("transformations")),
-  },
+export const getCustomQuestions = query({
+  args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {
     return await ctx.db
       .query("recommendations")
-      .withIndex("by_tier", (q) =>
-        q.eq("roomId", args.roomId).eq("tier", args.tier)
-      )
-      .first();
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .filter((q) => q.eq(q.field("tier"), "custom_question"))
+      .order("desc")
+      .collect();
   },
 });
 
-export const get = query({
+export const deleteCustomQuestion = mutation({
   args: { id: v.id("recommendations") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const rec = await ctx.db.get(args.id);
+    if (!rec || rec.tier !== "custom_question") {
+      throw new Error("Not a custom question recommendation");
+    }
+    await ctx.db.delete(args.id);
   },
 });
 
-export const generate = mutation({
+export const askCustomQuestion = mutation({
   args: {
     roomId: v.id("rooms"),
-    tier: v.union(v.literal("quick_wins"), v.literal("transformations")),
+    question: v.string(),
   },
   handler: async (ctx, args) => {
-    // Get the latest completed analysis for this room
     const analysis = await ctx.db
       .query("analyses")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -52,7 +52,45 @@ export const generate = mutation({
       throw new Error("No completed analysis found for this room");
     }
 
-    // Check if we already have recommendations for this tier
+    // Create a new custom question recommendation
+    const recommendationId = await ctx.db.insert("recommendations", {
+      roomId: args.roomId,
+      analysisId: analysis._id,
+      tier: "custom_question",
+      status: "generating",
+      userQuestion: args.question,
+      items: [],
+      createdAt: Date.now(),
+    });
+
+    await ctx.scheduler.runAfter(0, internal.ai.advisor.answerCustomQuestion, {
+      roomId: args.roomId,
+      analysisId: analysis._id,
+      recommendationId,
+      userQuestion: args.question,
+    });
+
+    return recommendationId;
+  },
+});
+
+export const generate = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    tier: v.union(v.literal("quick_wins"), v.literal("transformations")),
+  },
+  handler: async (ctx, args) => {
+    const analysis = await ctx.db
+      .query("analyses")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .filter((q) => q.eq(q.field("status"), "completed"))
+      .order("desc")
+      .first();
+
+    if (!analysis) {
+      throw new Error("No completed analysis found for this room");
+    }
+
     const existing = await ctx.db
       .query("recommendations")
       .withIndex("by_tier", (q) =>
@@ -64,7 +102,6 @@ export const generate = mutation({
       return existing._id;
     }
 
-    // Create or update recommendation record
     let recommendationId;
     if (existing) {
       await ctx.db.patch(existing._id, { status: "generating" });
@@ -80,7 +117,6 @@ export const generate = mutation({
       });
     }
 
-    // Trigger AI generation
     await ctx.scheduler.runAfter(0, internal.ai.advisor.generateRecommendations, {
       roomId: args.roomId,
       analysisId: analysis._id,
@@ -158,5 +194,69 @@ export const toggleItemSelection = mutation({
     );
 
     await ctx.db.patch(args.id, { items });
+  },
+});
+
+export const regenerate = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    tier: v.union(v.literal("quick_wins"), v.literal("transformations")),
+  },
+  handler: async (ctx, args) => {
+    const analysis = await ctx.db
+      .query("analyses")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .filter((q) => q.eq(q.field("status"), "completed"))
+      .order("desc")
+      .first();
+
+    if (!analysis) {
+      throw new Error("No completed analysis found for this room");
+    }
+
+    // Find existing recommendation
+    const existing = await ctx.db
+      .query("recommendations")
+      .withIndex("by_tier", (q) =>
+        q.eq("roomId", args.roomId).eq("tier", args.tier)
+      )
+      .first();
+
+    // Reset to generating status
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        status: "generating",
+        items: [],
+      });
+    } else {
+      // Create new if doesn't exist
+      const recommendationId = await ctx.db.insert("recommendations", {
+        roomId: args.roomId,
+        analysisId: analysis._id,
+        tier: args.tier,
+        status: "generating",
+        items: [],
+        createdAt: Date.now(),
+      });
+
+      await ctx.scheduler.runAfter(0, internal.ai.advisor.generateRecommendations, {
+        roomId: args.roomId,
+        analysisId: analysis._id,
+        tier: args.tier,
+        recommendationId,
+      });
+
+      return recommendationId;
+    }
+
+    // Trigger regeneration
+    await ctx.scheduler.runAfter(0, internal.ai.advisor.generateRecommendations, {
+      roomId: args.roomId,
+      analysisId: analysis._id,
+      tier: args.tier,
+      recommendationId: existing._id,
+    });
+
+    return existing._id;
   },
 });

@@ -59,7 +59,6 @@ export const analyze = internalAction({
     photoStorageIds: v.array(v.id("_storage")),
   },
   handler: async (ctx, args) => {
-    // Create analysis record
     const analysisId = await ctx.runMutation(internal.analyses.create, {
       roomId: args.roomId,
       photoStorageIds: args.photoStorageIds,
@@ -71,7 +70,6 @@ export const analyze = internalAction({
         status: "processing",
       });
 
-      // Get URLs for all photos
       const imageUrls: string[] = [];
       for (const storageId of args.photoStorageIds) {
         const url = await ctx.storage.getUrl(storageId);
@@ -81,7 +79,6 @@ export const analyze = internalAction({
         throw new Error("Failed to get any image URLs");
       }
 
-      // Build content array with all images
       const contentParts: Array<
         | { type: "image_url"; image_url: { url: string; detail: "high" | "auto" } }
         | { type: "text"; text: string }
@@ -99,21 +96,13 @@ export const analyze = internalAction({
         text: SCENE_ANALYSIS_USER_PROMPT,
       });
 
-      const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
-          {
-            role: "system",
-            content: SCENE_ANALYSIS_SYSTEM_PROMPT,
-          },
-          {
-            role: "user",
-            content: contentParts,
-          },
+          { role: "system", content: SCENE_ANALYSIS_SYSTEM_PROMPT },
+          { role: "user", content: contentParts },
         ],
         response_format: { type: "json_object" },
         max_tokens: 3000,

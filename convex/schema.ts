@@ -7,6 +7,7 @@ export default defineSchema({
     sessionId: v.string(),
     name: v.string(),
     description: v.optional(v.string()),
+    status: v.optional(v.string()),
     budget: v.optional(v.object({
       total: v.number(),
       spent: v.number(),
@@ -24,16 +25,10 @@ export default defineSchema({
       childFriendly: v.boolean(),
       mobilityAccessible: v.boolean(),
     })),
-    status: v.union(
-      v.literal("discovery"),
-      v.literal("active"),
-      v.literal("completed")
-    ),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_session", ["sessionId"])
-    .index("by_status", ["sessionId", "status"]),
+    .index("by_session", ["sessionId"]),
 
   // Individual rooms within a project
   rooms: defineTable({
@@ -111,7 +106,8 @@ export default defineSchema({
     analysisId: v.id("analyses"),
     tier: v.union(
       v.literal("quick_wins"),
-      v.literal("transformations")
+      v.literal("transformations"),
+      v.literal("custom_question")
     ),
     status: v.union(
       v.literal("pending"),
@@ -119,11 +115,13 @@ export default defineSchema({
       v.literal("completed"),
       v.literal("failed")
     ),
+    // For custom questions
+    userQuestion: v.optional(v.string()),
     items: v.array(v.object({
       id: v.string(),
       title: v.string(),
       description: v.string(),
-      category: v.string(),
+      category: v.string(), // decor|lighting|textiles|plants|organization|artwork|rearrangement|paint|furniture|fixtures|flooring|layout
       estimatedCost: v.object({
         min: v.number(),
         max: v.number(),
@@ -190,23 +188,17 @@ export default defineSchema({
   // Style quiz responses for discovery
   styleQuizResponses: defineTable({
     sessionId: v.string(),
-    responses: v.array(v.object({
-      questionId: v.string(),
-      selectedOption: v.string(),
-    })),
-    moodBoardSelections: v.array(v.string()),
-    preferences: v.object({
-      comfort: v.number(),
-      aesthetics: v.number(),
-      minimal: v.number(),
-      cozy: v.number(),
-      modern: v.number(),
-      traditional: v.number(),
-    }),
+    emotionalVibe: v.optional(v.string()), // serenity | energy | cozy | order
+    visualAnchor: v.optional(v.string()), // modern | traditional | bohemian | industrial
+    decorDensity: v.optional(v.string()), // purist | curator | collector
+    colorPattern: v.optional(v.string()), // neutral | natural | bold
     calculatedStyle: v.optional(v.object({
       primaryStyle: v.string(),
       secondaryStyle: v.optional(v.string()),
       description: v.string(),
+      emotionalVibe: v.string(),
+      decorDensity: v.string(),
+      colorPattern: v.string(),
     })),
     createdAt: v.number(),
     completedAt: v.optional(v.number()),

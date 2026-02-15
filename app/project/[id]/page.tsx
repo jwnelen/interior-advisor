@@ -144,32 +144,6 @@ export default function ProjectPage() {
               </CardContent>
             </Card>
           )}
-          {project.constraints && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-text-tertiary">Constraints</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-1">
-                  {project.constraints.rentalFriendly && (
-                    <span className="text-xs bg-constraint-rental text-constraint-rental-text px-2 py-1 rounded">
-                      Rental
-                    </span>
-                  )}
-                  {project.constraints.petFriendly && (
-                    <span className="text-xs bg-constraint-pet text-constraint-pet-text px-2 py-1 rounded">
-                      Pet
-                    </span>
-                  )}
-                  {project.constraints.childFriendly && (
-                    <span className="text-xs bg-constraint-child text-constraint-child-text px-2 py-1 rounded">
-                      Child
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-text-tertiary">Rooms</CardTitle>

@@ -36,12 +36,6 @@ export const create = mutation({
       spent: v.number(),
       currency: v.string(),
     })),
-    constraints: v.optional(v.object({
-      rentalFriendly: v.boolean(),
-      petFriendly: v.boolean(),
-      childFriendly: v.boolean(),
-      mobilityAccessible: v.boolean(),
-    })),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -50,8 +44,6 @@ export const create = mutation({
       name: args.name,
       description: args.description,
       budget: args.budget,
-      constraints: args.constraints,
-      status: "active",
       createdAt: now,
       updatedAt: now,
     });
@@ -74,17 +66,6 @@ export const update = mutation({
       colorPreferences: v.array(v.string()),
       priorities: v.array(v.string()),
     })),
-    constraints: v.optional(v.object({
-      rentalFriendly: v.boolean(),
-      petFriendly: v.boolean(),
-      childFriendly: v.boolean(),
-      mobilityAccessible: v.boolean(),
-    })),
-    status: v.optional(v.union(
-      v.literal("discovery"),
-      v.literal("active"),
-      v.literal("completed")
-    )),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
@@ -101,19 +82,16 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("projects") },
   handler: async (ctx, args) => {
-    // Delete associated rooms first
     const rooms = await ctx.db
       .query("rooms")
       .withIndex("by_project", (q) => q.eq("projectId", args.id))
       .collect();
 
     for (const room of rooms) {
-      // Delete room photos from storage
       for (const photo of room.photos) {
         await ctx.storage.delete(photo.storageId);
       }
 
-      // Delete analyses for this room
       const analyses = await ctx.db
         .query("analyses")
         .withIndex("by_room", (q) => q.eq("roomId", room._id))
@@ -122,7 +100,6 @@ export const remove = mutation({
         await ctx.db.delete(analysis._id);
       }
 
-      // Delete recommendations for this room
       const recommendations = await ctx.db
         .query("recommendations")
         .withIndex("by_room", (q) => q.eq("roomId", room._id))
@@ -131,7 +108,6 @@ export const remove = mutation({
         await ctx.db.delete(rec._id);
       }
 
-      // Delete visualizations for this room
       const visualizations = await ctx.db
         .query("visualizations")
         .withIndex("by_room", (q) => q.eq("roomId", room._id))
