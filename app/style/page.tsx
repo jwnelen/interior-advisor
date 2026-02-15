@@ -9,8 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   STYLE_IMAGES,
-  QUIZ_PAIRS,
-  PREFERENCES,
   STYLE_DESCRIPTIONS,
   STYLE_COLOR_PALETTES,
   COLOR_HEX_MAP,
@@ -93,94 +91,72 @@ export default function StylePage() {
               <h2 className="text-2xl font-semibold text-accent-brand capitalize mb-2">
                 {style.primaryStyle}
                 {style.secondaryStyle &&
-                  ` with ${style.secondaryStyle} touches`}
+                  ` × ${style.secondaryStyle}`}
               </h2>
               <p className="text-text-secondary text-lg">
-                {style.description}
+                {style.description || STYLE_DESCRIPTIONS[style.primaryStyle]}
               </p>
             </div>
 
-            {/* Quiz answers */}
-            <section>
-              <h3 className="text-xl font-semibold mb-4">Quiz Answers</h3>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {QUIZ_PAIRS.map((pair) => {
-                  const response = quizData.responses.find(
-                    (r) => r.questionId === pair.id
-                  );
-                  const selectedOption = pair.options.find(
-                    (o) => o.id === response?.selectedOption
-                  );
-                  const styleImage = STYLE_IMAGES.find(
-                    (s) => s.id === response?.selectedOption
-                  );
-
-                  return (
-                    <Card key={pair.id}>
-                      <CardContent className="p-4">
-                        <p className="text-sm text-text-tertiary mb-2">
-                          {pair.question}
-                        </p>
-                        <div className="flex items-center gap-3">
-                          {styleImage?.imageUrl && (
-                            <img
-                              src={styleImage.imageUrl}
-                              alt={selectedOption?.label ?? ""}
-                              className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                            />
-                          )}
-                          <span className="font-medium">
-                            {selectedOption?.label ?? "—"}
+            {/* Style DNA (New Quiz Format) */}
+            {(style.emotionalVibe || style.decorDensity || style.colorPattern) && (
+              <section>
+                <h3 className="text-xl font-semibold mb-4">Your Style DNA</h3>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="grid sm:grid-cols-2 gap-6">
+                      {style.emotionalVibe && (
+                        <div>
+                          <span className="text-text-tertiary text-sm uppercase tracking-wide">
+                            Emotional Vibe
                           </span>
+                          <p className="font-semibold text-lg capitalize mt-1">
+                            {style.emotionalVibe}
+                          </p>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </section>
-
-            {/* Preferences */}
-            <section>
-              <h3 className="text-xl font-semibold mb-4">Your Preferences</h3>
-              <Card>
-                <CardContent className="p-6 space-y-6">
-                  {PREFERENCES.map((pref) => {
-                    const value =
-                      quizData.preferences[
-                        pref.id as keyof typeof quizData.preferences
-                      ] ?? 50;
-
-                    return (
-                      <div key={pref.id}>
-                        <div className="flex justify-between text-sm mb-2">
-                          <span className="text-text-secondary">
-                            {pref.leftLabel}
+                      )}
+                      {quizData.visualAnchor && (
+                        <div>
+                          <span className="text-text-tertiary text-sm uppercase tracking-wide">
+                            Visual Anchor
                           </span>
-                          <span className="font-medium">{pref.label}</span>
-                          <span className="text-text-secondary">
-                            {pref.rightLabel}
+                          <p className="font-semibold text-lg capitalize mt-1">
+                            {quizData.visualAnchor}
+                          </p>
+                        </div>
+                      )}
+                      {style.decorDensity && (
+                        <div>
+                          <span className="text-text-tertiary text-sm uppercase tracking-wide">
+                            Decor Approach
                           </span>
+                          <p className="font-semibold text-lg capitalize mt-1">
+                            {style.decorDensity === "purist"
+                              ? "The Purist"
+                              : style.decorDensity === "curator"
+                              ? "The Curator"
+                              : "The Collector"}
+                          </p>
                         </div>
-                        <div className="relative h-2 rounded-full bg-surface-inset">
-                          <div
-                            className="absolute top-0 left-0 h-full rounded-full bg-accent-brand"
-                            style={{ width: `${value}%` }}
-                          />
-                          <div
-                            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-accent-brand border-2 border-white shadow"
-                            style={{ left: `calc(${value}% - 8px)` }}
-                          />
+                      )}
+                      {style.colorPattern && (
+                        <div>
+                          <span className="text-text-tertiary text-sm uppercase tracking-wide">
+                            Color & Pattern
+                          </span>
+                          <p className="font-semibold text-lg capitalize mt-1">
+                            {style.colorPattern.replace("-", " & ")}
+                          </p>
                         </div>
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            </section>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </section>
+            )}
 
-            {/* Mood Board */}
-            {quizData.moodBoardSelections.length > 0 && (
+            {/* Mood Board (Legacy or for backward compatibility) */}
+            {quizData.moodBoardSelections && quizData.moodBoardSelections.length > 0 && (
               <section>
                 <h3 className="text-xl font-semibold mb-4">Mood Board</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -215,7 +191,7 @@ export default function StylePage() {
 
             {/* Color Palette */}
             <section>
-              <h3 className="text-xl font-semibold mb-4">Color Palette</h3>
+              <h3 className="text-xl font-semibold mb-4">Your Color Palette</h3>
               <div className="space-y-4">
                 {[style.primaryStyle, style.secondaryStyle]
                   .filter(Boolean)
@@ -229,7 +205,7 @@ export default function StylePage() {
                           <p className="text-sm text-text-tertiary mb-3 capitalize">
                             {styleName} palette
                           </p>
-                          <div className="flex gap-3">
+                          <div className="flex flex-wrap gap-3">
                             {colors.map((color) => (
                               <div
                                 key={color}
@@ -242,7 +218,7 @@ export default function StylePage() {
                                       COLOR_HEX_MAP[color] ?? "#ccc",
                                   }}
                                 />
-                                <span className="text-xs text-text-secondary capitalize">
+                                <span className="text-xs text-text-secondary capitalize max-w-[80px] text-center">
                                   {color}
                                 </span>
                               </div>
