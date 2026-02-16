@@ -144,7 +144,6 @@ export default defineSchema({
     })),
     summary: v.optional(v.string()),
     error: v.optional(v.string()),
-    userQuestion: v.optional(v.string()),
     createdAt: v.number(),
   })
     .index("by_room", ["roomId"])
