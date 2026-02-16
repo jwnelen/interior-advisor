@@ -60,11 +60,11 @@ export function RecommendationTier({
               <p className="text-sm font-normal text-text-tertiary">{subtitle}</p>
             </div>
             <div className="flex gap-2">
-              {!tier || tier.status !== "completed" ? (
+              {!tier || tier.status === "failed" ? (
                 <Button size="sm" onClick={onGenerate} disabled={isGenerating}>
-                  {isGenerating ? "Generating..." : "Generate"}
+                  {isGenerating ? "Generating..." : tier?.status === "failed" ? "Retry" : "Generate"}
                 </Button>
-              ) : (
+              ) : tier.status === "completed" ? (
                 <Button
                   size="sm"
                   variant="outline"
@@ -86,7 +86,7 @@ export function RecommendationTier({
                   </svg>
                   Regenerate
                 </Button>
-              )}
+              ) : null}
             </div>
           </CardTitle>
         </CardHeader>
@@ -108,6 +108,13 @@ export function RecommendationTier({
             <div className="py-8 text-center">
               <Progress value={50} className="mb-4" />
               <p className="text-text-tertiary">Generating recommendations...</p>
+            </div>
+          ) : tier?.status === "failed" ? (
+            <div className="py-8 space-y-4">
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                <p className="text-destructive text-sm font-medium mb-1">Failed to generate recommendations</p>
+                <p className="text-destructive/80 text-sm">{tier.error || "Unknown error"}</p>
+              </div>
             </div>
           ) : (
             <p className="text-text-tertiary text-center py-8">{emptyMessage}</p>

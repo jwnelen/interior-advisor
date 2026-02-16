@@ -8,6 +8,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import type { Recommendation } from "@/lib/types";
 import { downscaleImage } from "@/lib/utils";
+import { useLocalSession } from "@/lib/hooks/use-local-session";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,6 +20,7 @@ import { CustomQuestionSection } from "./_components/custom-question-section";
 import { VisualizationsTab } from "./_components/visualizations-tab";
 import { VisualizationDialog } from "./_components/visualization-dialog";
 import { Lightbox } from "./_components/lightbox";
+import { toast } from "sonner";
 
 const DEFAULT_VIS_PROMPT =
   "Add [describe the change]. Keep all other furniture, colors, lighting, and layout identical.";
@@ -27,9 +29,10 @@ export default function RoomPage() {
   const params = useParams();
   const projectId = params.id as Id<"projects">;
   const roomId = params.roomId as Id<"rooms">;
+  const sessionId = useLocalSession();
 
-  const room = useQuery(api.rooms.getPublic, { id: roomId });
-  const project = useQuery(api.projects.getPublic, { id: projectId });
+  const room = useQuery(api.rooms.getPublic, sessionId ? { id: roomId, sessionId } : "skip");
+  const project = useQuery(api.projects.getPublic, sessionId ? { id: projectId, sessionId } : "skip");
   const analysis = useQuery(api.analyses.getByRoom, { roomId });
   const recommendations = useQuery(api.recommendations.getByRoom, { roomId });
   const customQuestions = useQuery(api.recommendations.getCustomQuestions, { roomId });
@@ -66,6 +69,9 @@ export default function RoomPage() {
 
     setUploading(true);
     setUploadProgress({ current: 0, total: files.length });
+    let successCount = 0;
+    let failCount = 0;
+
     try {
       for (let index = 0; index < files.length; index++) {
         try {
@@ -78,12 +84,23 @@ export default function RoomPage() {
           });
           if (!response.ok) throw new Error(`Upload failed with status ${response.status}`);
           const { storageId } = await response.json();
-          await addPhoto({ roomId, storageId });
+          if (!sessionId) throw new Error("Session not found");
+          await addPhoto({ roomId, sessionId, storageId });
+          successCount++;
         } catch (error) {
+          failCount++;
           console.error(`Upload failed for ${files[index].name}:`, error);
+          toast.error(`Failed to upload ${files[index].name}`, {
+            description: error instanceof Error ? error.message : "Unknown error",
+          });
         } finally {
           setUploadProgress({ current: index + 1, total: files.length });
         }
+      }
+
+      // Show success message after all uploads complete
+      if (successCount > 0) {
+        toast.success(`Uploaded ${successCount} photo${successCount > 1 ? 's' : ''} successfully`);
       }
     } finally {
       setUploading(false);
@@ -93,20 +110,36 @@ export default function RoomPage() {
   };
 
   const handleGenerateAnalysis = async () => {
+    if (!sessionId) return;
     setAnalyzingRoom(true);
     try {
-      await generateAnalysis({ roomId });
+      await generateAnalysis({ roomId, sessionId });
+      toast.success("Analysis started", {
+        description: "We're analyzing your room photos. This may take a minute.",
+      });
     } catch (error) {
       console.error("Analysis generation failed:", error);
+      toast.error("Failed to start analysis", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
     } finally {
       setAnalyzingRoom(false);
     }
   };
 
   const handleGenerateRecommendations = async (tier: "quick_wins" | "transformations") => {
+    if (!sessionId) return;
     setGenerating(tier);
     try {
-      await generateRecommendations({ roomId, tier });
+      await generateRecommendations({ roomId, tier, sessionId });
+      toast.success("Generating recommendations", {
+        description: `Creating ${tier === "quick_wins" ? "quick win" : "transformation"} suggestions...`,
+      });
+    } catch (error) {
+      console.error("Recommendation generation failed:", error);
+      toast.error("Failed to generate recommendations", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
     } finally {
       setGenerating(null);
     }
@@ -135,29 +168,39 @@ export default function RoomPage() {
   };
 
   const handleGenerateVisualization = async () => {
-    if (!visualizationPrompt) return;
+    if (!visualizationPrompt || !sessionId) return;
     try {
       await generateVisualization({
         roomId,
         prompt: visualizationPrompt,
         type: "full_render",
         photoStorageId: selectedPhotoStorageId ?? undefined,
+        sessionId,
       });
       setShowVisDialog(false);
       setVisualizationPrompt("");
       setSelectedPhotoStorageId(null);
       setActiveTab("visualizations");
+      toast.success("Visualization queued", {
+        description: "Your room transformation is being generated. This may take a minute.",
+      });
     } catch (error) {
       console.error("Visualization failed:", error);
+      toast.error("Failed to create visualization", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
     }
   };
 
   const handleDeleteVisualization = async (id: Id<"visualizations">) => {
-    if (!window.confirm("Delete this visualization? This cannot be undone.")) return;
     try {
       await removeVisualization({ id });
+      toast.success("Visualization deleted");
     } catch (error) {
       console.error("Failed to delete visualization:", error);
+      toast.error("Failed to delete visualization", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
     }
   };
 
@@ -233,7 +276,10 @@ export default function RoomPage() {
               uploadProgress={uploadProgress}
               fileInputRef={fileInputRef}
               onFileUpload={handleFileUpload}
-              onRemovePhoto={removePhoto}
+              onRemovePhoto={(args) => {
+                if (!sessionId) return;
+                removePhoto({ ...args, sessionId });
+              }}
             />
             <AnalysisCard
               analysis={analysis}

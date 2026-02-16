@@ -1,6 +1,8 @@
 import { v } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { checkRateLimit, incrementRateLimit } from "./lib/rateLimiting";
+import { validatePrompt } from "./lib/validators";
 
 export const getByRoom = query({
   args: { roomId: v.id("rooms") },
@@ -27,10 +29,26 @@ export const generate = mutation({
     photoStorageId: v.optional(v.id("_storage")),
     controlNetMode: v.optional(v.string()),
     strength: v.optional(v.number()),
+    sessionId: v.string(),
   },
   handler: async (ctx, args) => {
+    // Check rate limit
+    const rateLimitError = await checkRateLimit(ctx, args.sessionId, "visualization");
+    if (rateLimitError) {
+      throw new Error(rateLimitError);
+    }
+
+    // Verify ownership
     const room = await ctx.db.get(args.roomId);
     if (!room) throw new Error("Room not found");
+
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.sessionId !== args.sessionId) {
+      throw new Error("Unauthorized");
+    }
+
+    // Validate prompt
+    validatePrompt(args.prompt);
 
     const chosenStorageId = args.photoStorageId ?? room.photos[0]?.storageId;
     if (!chosenStorageId) throw new Error("No photo available for visualization");
@@ -58,6 +76,9 @@ export const generate = mutation({
       controlNetMode: args.controlNetMode ?? "depth",
       strength: args.strength ?? 0.5,
     });
+
+    // Increment rate limit after successful scheduling
+    await incrementRateLimit(ctx, args.sessionId, "visualization");
 
     return visualizationId;
   },

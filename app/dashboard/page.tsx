@@ -18,7 +18,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
   const sessionId = useLocalSession();
@@ -39,25 +51,33 @@ export default function DashboardPage() {
   const handleCreateProject = async () => {
     if (!sessionId || !newProject.name) return;
 
-    await createProject({
-      sessionId,
-      name: newProject.name,
-      description: newProject.description || undefined,
-      budget: newProject.budget
-        ? {
-            total: parseFloat(newProject.budget),
-            spent: 0,
-            currency: "USD",
-          }
-        : undefined,
-    });
+    try {
+      await createProject({
+        sessionId,
+        name: newProject.name,
+        description: newProject.description || undefined,
+        budget: newProject.budget
+          ? {
+              total: parseFloat(newProject.budget),
+              spent: 0,
+              currency: "USD",
+            }
+          : undefined,
+      });
 
-    setNewProject({
-      name: "",
-      description: "",
-      budget: "",
-    });
-    setIsCreateOpen(false);
+      setNewProject({
+        name: "",
+        description: "",
+        budget: "",
+      });
+      setIsCreateOpen(false);
+      toast.success("Project created successfully");
+    } catch (error) {
+      console.error("Failed to create project:", error);
+      toast.error("Failed to create project", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
+    }
   };
 
   if (!sessionId) {
@@ -207,25 +227,54 @@ export default function DashboardPage() {
                     <Link href={`/project/${project._id}`} className="flex-1">
                       <Button className="w-full">Open</Button>
                     </Link>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => deleteProject({ id: project._id })}
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete project?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete "{project.name}" and all its rooms, photos, analyses, and recommendations. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={async () => {
+                              try {
+                                await deleteProject({ id: project._id, sessionId });
+                                toast.success("Project deleted");
+                              } catch (error) {
+                                console.error("Failed to delete project:", error);
+                                toast.error("Failed to delete project", {
+                                  description: error instanceof Error ? error.message : "Please try again",
+                                });
+                              }
+                            }}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </CardContent>
               </Card>

@@ -143,6 +143,8 @@ export default defineSchema({
       selected: v.optional(v.boolean()),
     })),
     summary: v.optional(v.string()),
+    error: v.optional(v.string()),
+    userQuestion: v.optional(v.string()),
     createdAt: v.number(),
   })
     .index("by_room", ["roomId"])
@@ -204,4 +206,18 @@ export default defineSchema({
     completedAt: v.optional(v.number()),
   })
     .index("by_session", ["sessionId"]),
+
+  // Rate limiting to prevent API abuse
+  rateLimits: defineTable({
+    sessionId: v.string(),
+    operation: v.union(
+      v.literal("analysis"),
+      v.literal("recommendations"),
+      v.literal("visualization")
+    ),
+    count: v.number(),
+    windowStart: v.number(),
+    lastReset: v.number(),
+  })
+    .index("by_session_operation", ["sessionId", "operation"]),
 });

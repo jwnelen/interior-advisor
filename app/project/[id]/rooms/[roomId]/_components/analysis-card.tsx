@@ -51,11 +51,21 @@ export function AnalysisCard({ analysis, onGenerate, disabled, buttonLabel, hasP
         ) : analysis.status === "completed" && analysis.results ? (
           <AnalysisResultsDisplay results={analysis.results} />
         ) : analysis.status === "failed" ? (
-          <p className="text-destructive text-sm">{analysis.error}</p>
+          <div className="space-y-3">
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+              <p className="text-destructive text-sm font-medium mb-1">Analysis failed</p>
+              <p className="text-destructive/80 text-sm">{analysis.error || "Unknown error"}</p>
+            </div>
+            <Button className="w-full" onClick={onGenerate} variant="outline">
+              Retry Analysis
+            </Button>
+          </div>
         ) : null}
-        <Button className="mt-4 w-full" onClick={onGenerate} disabled={disabled}>
-          {buttonLabel}
-        </Button>
+        {analysis?.status !== "failed" && (
+          <Button className="mt-4 w-full" onClick={onGenerate} disabled={disabled}>
+            {buttonLabel}
+          </Button>
+        )}
         {!hasPhotos && (
           <p className="text-xs text-text-tertiary mt-2">Add at least one photo to enable analysis.</p>
         )}

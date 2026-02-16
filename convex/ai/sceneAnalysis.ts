@@ -4,6 +4,8 @@ import { v } from "convex/values";
 import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 import OpenAI from "openai";
+import { withRetry } from "../lib/retry";
+import { createLogger } from "../lib/logger";
 
 const SCENE_ANALYSIS_SYSTEM_PROMPT = `You are an expert interior designer analyzing room photographs. You may receive multiple photos of the same room from different angles. Combine observations from all provided images into a single comprehensive analysis.
 
@@ -59,10 +61,19 @@ export const analyze = internalAction({
     photoStorageIds: v.array(v.id("_storage")),
   },
   handler: async (ctx, args) => {
+    const logger = createLogger("sceneAnalysis", {
+      roomId: args.roomId,
+      photoCount: args.photoStorageIds.length,
+    });
+
+    logger.info("Starting scene analysis");
+
     const analysisId = await ctx.runMutation(internal.analyses.create, {
       roomId: args.roomId,
       photoStorageIds: args.photoStorageIds,
     });
+
+    logger.info("Analysis record created", { analysisId });
 
     try {
       await ctx.runMutation(internal.analyses.updateStatus, {
@@ -76,8 +87,11 @@ export const analyze = internalAction({
         if (url) imageUrls.push(url);
       }
       if (imageUrls.length === 0) {
+        logger.error("Failed to get any image URLs");
         throw new Error("Failed to get any image URLs");
       }
+
+      logger.info("Retrieved image URLs", { urlCount: imageUrls.length });
 
       const contentParts: Array<
         | { type: "image_url"; image_url: { url: string; detail: "high" | "auto" } }
@@ -98,20 +112,32 @@ export const analyze = internalAction({
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: SCENE_ANALYSIS_SYSTEM_PROMPT },
-          { role: "user", content: contentParts },
-        ],
-        response_format: { type: "json_object" },
-        max_tokens: 3000,
-      });
+      logger.info("Calling OpenAI GPT-4o for scene analysis");
+
+      // Wrap OpenAI call in retry logic to handle transient failures
+      const response = await withRetry(
+        () => openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: SCENE_ANALYSIS_SYSTEM_PROMPT },
+            { role: "user", content: contentParts },
+          ],
+          response_format: { type: "json_object" },
+          max_tokens: 3000,
+        }),
+        { maxRetries: 3, baseDelay: 1000, maxDelay: 8000 }
+      );
 
       const content = response.choices[0].message.content;
       if (!content) {
+        logger.error("No response from OpenAI");
         throw new Error("No response from OpenAI");
       }
+
+      logger.info("Received OpenAI response", {
+        contentLength: content.length,
+        tokensUsed: response.usage?.total_tokens,
+      });
 
       const results = JSON.parse(content);
 
@@ -126,8 +152,10 @@ export const analyze = internalAction({
           rawAnalysis: content,
         },
       });
+
+      logger.info("Scene analysis completed successfully");
     } catch (error) {
-      console.error("Scene analysis failed:", error);
+      logger.error("Scene analysis failed", error, { analysisId });
       await ctx.runMutation(internal.analyses.fail, {
         id: analysisId,
         error: error instanceof Error ? error.message : "Unknown error",

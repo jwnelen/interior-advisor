@@ -112,6 +112,7 @@ export interface Recommendation {
   status: "pending" | "generating" | "completed" | "failed";
   items: RecommendationItem[];
   summary?: string;
+  error?: string;
   createdAt: number;
 }
 

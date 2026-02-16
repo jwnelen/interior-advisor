@@ -1,5 +1,11 @@
 import { v } from "convex/values";
 import { query, mutation, internalQuery } from "./_generated/server";
+import {
+  validateStringLength,
+  validateNoXSS,
+  validateDimensions,
+  validateRoomType,
+} from "./lib/validators";
 
 export const list = query({
   args: { projectId: v.id("projects") },
@@ -19,15 +25,25 @@ export const get = internalQuery({
 });
 
 export const getPublic = query({
-  args: { id: v.id("rooms") },
+  args: { id: v.id("rooms"), sessionId: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const room = await ctx.db.get(args.id);
+    if (!room) return null;
+
+    // Verify ownership via project
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.sessionId !== args.sessionId) {
+      throw new Error("Unauthorized");
+    }
+
+    return room;
   },
 });
 
 export const create = mutation({
   args: {
     projectId: v.id("projects"),
+    sessionId: v.string(),
     name: v.string(),
     type: v.string(),
     dimensions: v.optional(v.object({
@@ -39,6 +55,31 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Verify ownership of project
+    const project = await ctx.db.get(args.projectId);
+    if (!project) throw new Error("Project not found");
+    if (project.sessionId !== args.sessionId) {
+      throw new Error("Unauthorized");
+    }
+
+    // Validate inputs
+    validateStringLength(args.name, "Room name", 1, 100);
+    validateNoXSS(args.name, "Room name");
+    validateRoomType(args.type);
+
+    if (args.notes) {
+      validateStringLength(args.notes, "Room notes", 0, 1000);
+      validateNoXSS(args.notes, "Room notes");
+    }
+
+    if (args.dimensions) {
+      validateDimensions(
+        args.dimensions.width,
+        args.dimensions.length,
+        args.dimensions.height
+      );
+    }
+
     const now = Date.now();
     return await ctx.db.insert("rooms", {
       projectId: args.projectId,
@@ -56,6 +97,7 @@ export const create = mutation({
 export const update = mutation({
   args: {
     id: v.id("rooms"),
+    sessionId: v.string(),
     name: v.optional(v.string()),
     type: v.optional(v.string()),
     dimensions: v.optional(v.object({
@@ -67,7 +109,39 @@ export const update = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args;
+    // Verify ownership
+    const room = await ctx.db.get(args.id);
+    if (!room) throw new Error("Room not found");
+
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.sessionId !== args.sessionId) {
+      throw new Error("Unauthorized");
+    }
+
+    // Validate inputs
+    if (args.name !== undefined) {
+      validateStringLength(args.name, "Room name", 1, 100);
+      validateNoXSS(args.name, "Room name");
+    }
+
+    if (args.type !== undefined) {
+      validateRoomType(args.type);
+    }
+
+    if (args.notes !== undefined) {
+      validateStringLength(args.notes, "Room notes", 0, 1000);
+      validateNoXSS(args.notes, "Room notes");
+    }
+
+    if (args.dimensions !== undefined) {
+      validateDimensions(
+        args.dimensions.width,
+        args.dimensions.length,
+        args.dimensions.height
+      );
+    }
+
+    const { id, sessionId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined)
     );
@@ -79,10 +153,16 @@ export const update = mutation({
 });
 
 export const remove = mutation({
-  args: { id: v.id("rooms") },
+  args: { id: v.id("rooms"), sessionId: v.string() },
   handler: async (ctx, args) => {
+    // Verify ownership
     const room = await ctx.db.get(args.id);
-    if (!room) return;
+    if (!room) throw new Error("Room not found");
+
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.sessionId !== args.sessionId) {
+      throw new Error("Unauthorized");
+    }
 
     for (const photo of room.photos) {
       await ctx.storage.delete(photo.storageId);
@@ -122,11 +202,18 @@ export const remove = mutation({
 export const addPhoto = mutation({
   args: {
     roomId: v.id("rooms"),
+    sessionId: v.string(),
     storageId: v.id("_storage"),
   },
   handler: async (ctx, args) => {
+    // Verify ownership
     const room = await ctx.db.get(args.roomId);
     if (!room) throw new Error("Room not found");
+
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.sessionId !== args.sessionId) {
+      throw new Error("Unauthorized");
+    }
 
     const url = await ctx.storage.getUrl(args.storageId);
     if (!url) throw new Error("Failed to get storage URL");
@@ -150,10 +237,17 @@ export const removePhoto = mutation({
   args: {
     roomId: v.id("rooms"),
     storageId: v.id("_storage"),
+    sessionId: v.string(),
   },
   handler: async (ctx, args) => {
+    // Verify ownership
     const room = await ctx.db.get(args.roomId);
     if (!room) throw new Error("Room not found");
+
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.sessionId !== args.sessionId) {
+      throw new Error("Unauthorized");
+    }
 
     const photos = room.photos.filter((p) => p.storageId !== args.storageId);
 

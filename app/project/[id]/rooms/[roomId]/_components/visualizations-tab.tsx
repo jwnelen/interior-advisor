@@ -2,6 +2,17 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Maximize2 } from "lucide-react";
 
 interface VisualizationData {
@@ -55,9 +66,27 @@ export function VisualizationsTab({
                     <p className="text-sm text-text-secondary whitespace-pre-wrap break-words">
                       {vis.input.prompt}
                     </p>
-                    <Button size="xs" variant="destructive" onClick={() => onDelete(vis._id)}>
-                      Delete
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="xs" variant="destructive">
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete visualization?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete this generated visualization. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDelete(vis._id)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               </div>
@@ -108,9 +137,11 @@ function VisualizationPreview({
   }
 
   return (
-    <div className="aspect-video bg-red-50 dark:bg-red-950/30 flex flex-col items-center justify-center px-4 text-center">
-      <p className="text-sm text-destructive font-medium">Failed</p>
-      {vis.error && <p className="text-xs text-destructive mt-1 line-clamp-3">{vis.error}</p>}
+    <div className="aspect-video bg-red-50 dark:bg-red-950/30 flex flex-col items-center justify-center px-4 text-center gap-2">
+      <div>
+        <p className="text-sm text-destructive font-medium">Failed</p>
+        {vis.error && <p className="text-xs text-destructive mt-1 line-clamp-2">{vis.error}</p>}
+      </div>
     </div>
   );
 }

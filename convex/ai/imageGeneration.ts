@@ -4,6 +4,8 @@ import { v } from "convex/values";
 import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 import Replicate from "replicate";
+import { withRetry } from "../lib/retry";
+import { createLogger } from "../lib/logger";
 
 function buildInteriorPrompt(userPrompt: string): string {
   return [
@@ -26,9 +28,14 @@ export const generateVisualization = internalAction({
     strength: v.number(),
   },
   handler: async (ctx, args) => {
-    const logPrefix = `[Visualization ${args.visualizationId}]`;
+    const logger = createLogger("imageGeneration", {
+      visualizationId: args.visualizationId,
+      roomId: args.roomId,
+      type: args.type,
+    });
+
     try {
-      console.log(`${logPrefix} Starting generation for room ${args.roomId}`);
+      logger.info("Starting image generation");
 
       await ctx.runMutation(internal.visualizations.updateStatus, {
         id: args.visualizationId,
@@ -37,45 +44,62 @@ export const generateVisualization = internalAction({
 
       const originalUrl = await ctx.storage.getUrl(args.originalPhotoId);
       if (!originalUrl) {
+        logger.error("Failed to get original image URL");
         throw new Error("Failed to get original image URL");
       }
 
+      logger.info("Retrieved original image URL");
+
       const replicateToken = process.env.REPLICATE_API_TOKEN;
       if (!replicateToken) {
+        logger.error("Replicate API token not configured");
         throw new Error("Replicate API token (REPLICATE_API_TOKEN) is not configured");
       }
 
       const replicate = new Replicate({ auth: replicateToken });
 
-      console.log(`${logPrefix} Calling Replicate API`);
-      const rawOutput = await replicate.run(
-        "google/nano-banana",
-        {
-          input: {
-            prompt: buildInteriorPrompt(args.prompt),
-            image_input: [originalUrl],
-          },
-        }
+      logger.info("Calling Replicate API", { model: "google/nano-banana" });
+      // Wrap Replicate API call in retry logic to handle transient failures
+      const rawOutput = await withRetry(
+        () => replicate.run(
+          "google/nano-banana",
+          {
+            input: {
+              prompt: buildInteriorPrompt(args.prompt),
+              image_input: [originalUrl],
+            },
+          }
+        ),
+        { maxRetries: 3, baseDelay: 2000, maxDelay: 16000 }
       );
 
-      console.log(`${logPrefix} Resolving output`);
+      logger.info("Received Replicate response");
+
       const resolved = await resolveVisualizationOutput(rawOutput);
       let storageId;
 
       if (resolved.kind === "url") {
-        console.log(`${logPrefix} Downloading generated image`);
+        logger.info("Downloading generated image from URL");
         const response = await fetch(resolved.url);
         if (!response.ok) {
+          logger.error("Failed to download generated image", null, {
+            status: response.status,
+            statusText: response.statusText,
+          });
           throw new Error(`Failed to download generated image: ${response.status} ${response.statusText}`);
         }
         const blob = await response.blob();
         storageId = await ctx.storage.store(blob);
       } else {
+        logger.info("Storing generated image from blob");
         storageId = await ctx.storage.store(resolved.blob);
       }
 
+      logger.info("Image stored successfully", { storageId });
+
       const url = await ctx.storage.getUrl(storageId);
       if (!url) {
+        logger.error("Failed to get storage URL for generated image");
         throw new Error("Failed to get storage URL for generated image");
       }
 
@@ -84,10 +108,11 @@ export const generateVisualization = internalAction({
         storageId,
         url,
       });
-      console.log(`${logPrefix} Successfully finished`);
+
+      logger.info("Visualization generation completed successfully");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`${logPrefix} Image generation failed:`, error);
+      logger.error("Image generation failed", error);
 
       try {
         await ctx.runMutation(internal.visualizations.fail, {
@@ -95,7 +120,7 @@ export const generateVisualization = internalAction({
           error: errorMessage || "Unknown error occurred during generation",
         });
       } catch (failError) {
-        console.error(`${logPrefix} Failed to record failure status:`, failError);
+        console.error(`Failed to record failure status:`, failError);
       }
     }
   },

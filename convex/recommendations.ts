@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { checkRateLimit, incrementRateLimit } from "./lib/rateLimiting";
 
 export const getByRoom = query({
   args: { roomId: v.id("rooms") },
@@ -78,8 +79,24 @@ export const generate = mutation({
   args: {
     roomId: v.id("rooms"),
     tier: v.union(v.literal("quick_wins"), v.literal("transformations")),
+    sessionId: v.string(),
   },
   handler: async (ctx, args) => {
+    // Check rate limit
+    const rateLimitError = await checkRateLimit(ctx, args.sessionId, "recommendations");
+    if (rateLimitError) {
+      throw new Error(rateLimitError);
+    }
+
+    // Verify ownership
+    const room = await ctx.db.get(args.roomId);
+    if (!room) throw new Error("Room not found");
+
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.sessionId !== args.sessionId) {
+      throw new Error("Unauthorized");
+    }
+
     const analysis = await ctx.db
       .query("analyses")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -123,6 +140,9 @@ export const generate = mutation({
       tier: args.tier,
       recommendationId,
     });
+
+    // Increment rate limit after successful scheduling
+    await incrementRateLimit(ctx, args.sessionId, "recommendations");
 
     return recommendationId;
   },

@@ -4,6 +4,8 @@ import { v } from "convex/values";
 import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 import OpenAI from "openai";
+import { withRetry } from "../lib/retry";
+import { createLogger } from "../lib/logger";
 
 const ADVISOR_SYSTEM_PROMPT = `You are an expert interior designer providing actionable recommendations to improve a room.
 You have been given a detailed analysis of a room photo and the user's style profile from a discovery quiz.
@@ -185,9 +187,18 @@ export const generateRecommendations = internalAction({
     recommendationId: v.id("recommendations"),
   },
   handler: async (ctx, args) => {
+    const logger = createLogger("advisor", {
+      roomId: args.roomId,
+      tier: args.tier,
+      recommendationId: args.recommendationId,
+    });
+
+    logger.info("Starting recommendation generation");
+
     try {
       const analysis = await ctx.runQuery(internal.analyses.get, { id: args.analysisId });
       if (!analysis || !analysis.results) {
+        logger.error("Analysis not found or incomplete");
         throw new Error("Analysis not found or incomplete");
       }
 
@@ -202,22 +213,37 @@ export const generateRecommendations = internalAction({
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: ADVISOR_SYSTEM_PROMPT },
-          { role: "user", content: context + "\n\n" + tierPrompt },
-        ],
-        response_format: { type: "json_object" },
-        max_tokens: 3000,
-      });
+      logger.info("Calling OpenAI for recommendations");
+
+      // Wrap OpenAI call in retry logic to handle transient failures
+      const response = await withRetry(
+        () => openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: ADVISOR_SYSTEM_PROMPT },
+            { role: "user", content: context + "\n\n" + tierPrompt },
+          ],
+          response_format: { type: "json_object" },
+          max_tokens: 3000,
+        }),
+        { maxRetries: 3, baseDelay: 1000, maxDelay: 8000 }
+      );
 
       const content = response.choices[0].message.content;
       if (!content) {
+        logger.error("No response from OpenAI");
         throw new Error("No response from OpenAI");
       }
 
+      logger.info("Received OpenAI response", {
+        contentLength: content.length,
+        tokensUsed: response.usage?.total_tokens,
+      });
+
       const recommendations = JSON.parse(content);
+      logger.info("Parsed recommendations", {
+        itemCount: recommendations.items?.length || 0,
+      });
 
       // Map suggestedPhotoIndex to actual storage IDs
       const photos = room.photos ?? [];
@@ -241,8 +267,10 @@ export const generateRecommendations = internalAction({
         }),
         summary: recommendations.summary,
       });
+
+      logger.info("Recommendations saved successfully");
     } catch (error) {
-      console.error("Recommendation generation failed:", error);
+      logger.error("Recommendation generation failed", error);
       await ctx.runMutation(internal.recommendations.fail, {
         id: args.recommendationId,
         error: error instanceof Error ? error.message : "Unknown error",

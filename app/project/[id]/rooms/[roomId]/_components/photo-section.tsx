@@ -2,6 +2,7 @@ import { RefObject } from "react";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
 
 interface PhotoSectionProps {
   photos: { storageId: Id<"_storage">; url: string }[];
@@ -67,14 +68,27 @@ export function PhotoSection({
         ) : (
           <div className="space-y-2">
             <div className="aspect-video bg-surface-inset rounded-lg overflow-hidden relative group">
-              <img src={photos[0].url} alt={roomName} className="w-full h-full object-cover" />
+              <Image
+                src={photos[0].url}
+                alt={roomName}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 33vw"
+                priority
+              />
               <RemoveButton onClick={() => onRemovePhoto({ roomId, storageId: photos[0].storageId })} />
             </div>
             {photos.length > 1 && (
               <div className="grid grid-cols-3 gap-2">
                 {photos.slice(1).map((photo) => (
                   <div key={photo.storageId} className="aspect-square bg-surface-inset rounded overflow-hidden relative group">
-                    <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                    <Image
+                      src={photo.url}
+                      alt={`${roomName} photo`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 33vw, 11vw"
+                    />
                     <RemoveButton onClick={() => onRemovePhoto({ roomId, storageId: photo.storageId })} />
                   </div>
                 ))}

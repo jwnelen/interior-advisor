@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -26,14 +27,28 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { ROOM_TYPES } from "@/lib/constants";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { toast } from "sonner";
+import { useLocalSession } from "@/lib/hooks/use-local-session";
 
 export default function ProjectPage() {
   const params = useParams();
   const projectId = params.id as Id<"projects">;
+  const sessionId = useLocalSession();
 
-  const project = useQuery(api.projects.getPublic, { id: projectId });
+  const project = useQuery(api.projects.getPublic, sessionId ? { id: projectId, sessionId } : "skip");
   const rooms = useQuery(api.rooms.list, { projectId });
   const createRoom = useMutation(api.rooms.create);
   const deleteRoom = useMutation(api.rooms.remove);
@@ -46,17 +61,26 @@ export default function ProjectPage() {
   });
 
   const handleCreateRoom = async () => {
-    if (!newRoom.name || !newRoom.type) return;
+    if (!newRoom.name || !newRoom.type || !sessionId) return;
 
-    await createRoom({
-      projectId,
-      name: newRoom.name,
-      type: newRoom.type,
-      notes: newRoom.notes || undefined,
-    });
+    try {
+      await createRoom({
+        projectId,
+        sessionId,
+        name: newRoom.name,
+        type: newRoom.type,
+        notes: newRoom.notes || undefined,
+      });
 
-    setNewRoom({ name: "", type: "", notes: "" });
-    setIsCreateOpen(false);
+      setNewRoom({ name: "", type: "", notes: "" });
+      setIsCreateOpen(false);
+      toast.success("Room created successfully");
+    } catch (error) {
+      console.error("Failed to create room:", error);
+      toast.error("Failed to create room", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
+    }
   };
 
   if (project === undefined || rooms === undefined) {
@@ -255,11 +279,13 @@ export default function ProjectPage() {
                 </CardHeader>
                 <CardContent>
                   {room.photos.length > 0 ? (
-                    <div className="aspect-video bg-surface-inset rounded-lg mb-4 overflow-hidden">
-                      <img
+                    <div className="aspect-video bg-surface-inset rounded-lg mb-4 overflow-hidden relative">
+                      <Image
                         src={room.photos[0].url}
                         alt={room.name}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
                     </div>
                   ) : (
@@ -292,25 +318,55 @@ export default function ProjectPage() {
                         {room.photos.length > 0 ? "View Room" : "Add Photos"}
                       </Button>
                     </Link>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => deleteRoom({ id: room._id })}
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete room?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete "{room.name}" and all its photos, analyses, recommendations, and visualizations. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={async () => {
+                              if (!sessionId) return;
+                              try {
+                                await deleteRoom({ id: room._id, sessionId });
+                                toast.success("Room deleted");
+                              } catch (error) {
+                                console.error("Failed to delete room:", error);
+                                toast.error("Failed to delete room", {
+                                  description: error instanceof Error ? error.message : "Please try again",
+                                });
+                              }
+                            }}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </CardContent>
               </Card>
