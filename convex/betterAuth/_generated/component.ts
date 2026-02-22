@@ -1,6 +1,6 @@
 /* eslint-disable */
 /**
- * Generated `api` utility.
+ * Generated `ComponentApi` utility.
  *
  * THIS CODE IS AUTOMATICALLY GENERATED.
  *
@@ -8,80 +8,21 @@
  * @module
  */
 
-import type * as ai_advisor from "../ai/advisor.js";
-import type * as ai_imageGeneration from "../ai/imageGeneration.js";
-import type * as ai_sceneAnalysis from "../ai/sceneAnalysis.js";
-import type * as analyses from "../analyses.js";
-import type * as auth from "../auth.js";
-import type * as cleanup from "../cleanup.js";
-import type * as crons from "../crons.js";
-import type * as http from "../http.js";
-import type * as lib_env from "../lib/env.js";
-import type * as lib_logger from "../lib/logger.js";
-import type * as lib_rateLimiting from "../lib/rateLimiting.js";
-import type * as lib_retry from "../lib/retry.js";
-import type * as lib_validators from "../lib/validators.js";
-import type * as projects from "../projects.js";
-import type * as recommendations from "../recommendations.js";
-import type * as rooms from "../rooms.js";
-import type * as styleQuiz from "../styleQuiz.js";
-import type * as visualizations from "../visualizations.js";
-
-import type {
-  ApiFromModules,
-  FilterApi,
-  FunctionReference,
-} from "convex/server";
-
-declare const fullApi: ApiFromModules<{
-  "ai/advisor": typeof ai_advisor;
-  "ai/imageGeneration": typeof ai_imageGeneration;
-  "ai/sceneAnalysis": typeof ai_sceneAnalysis;
-  analyses: typeof analyses;
-  auth: typeof auth;
-  cleanup: typeof cleanup;
-  crons: typeof crons;
-  http: typeof http;
-  "lib/env": typeof lib_env;
-  "lib/logger": typeof lib_logger;
-  "lib/rateLimiting": typeof lib_rateLimiting;
-  "lib/retry": typeof lib_retry;
-  "lib/validators": typeof lib_validators;
-  projects: typeof projects;
-  recommendations: typeof recommendations;
-  rooms: typeof rooms;
-  styleQuiz: typeof styleQuiz;
-  visualizations: typeof visualizations;
-}>;
+import type { FunctionReference } from "convex/server";
 
 /**
- * A utility for referencing Convex functions in your app's public API.
+ * A utility for referencing a Convex component's exposed API.
  *
+ * Useful when expecting a parameter like `components.myComponent`.
  * Usage:
- * ```js
- * const myFunctionReference = api.myModule.myFunction;
+ * ```ts
+ * async function myFunction(ctx: QueryCtx, component: ComponentApi) {
+ *   return ctx.runQuery(component.someFile.someQuery, { ...args });
+ * }
  * ```
  */
-export declare const api: FilterApi<
-  typeof fullApi,
-  FunctionReference<any, "public">
->;
-
-/**
- * A utility for referencing Convex functions in your app's internal API.
- *
- * Usage:
- * ```js
- * const myFunctionReference = internal.myModule.myFunction;
- * ```
- */
-export declare const internal: FilterApi<
-  typeof fullApi,
-  FunctionReference<any, "internal">
->;
-
-export declare const components: {
-  betterAuth: {
+export type ComponentApi<Name extends string | undefined = string | undefined> =
+  {
     adapter: {
       create: FunctionReference<
         "mutation",
@@ -151,7 +92,8 @@ export declare const components: {
           onCreateHandle?: string;
           select?: Array<string>;
         },
-        any
+        any,
+        Name
       >;
       deleteMany: FunctionReference<
         "mutation",
@@ -338,7 +280,8 @@ export declare const components: {
             numItems: number;
           };
         },
-        any
+        any,
+        Name
       >;
       deleteOne: FunctionReference<
         "mutation",
@@ -517,7 +460,8 @@ export declare const components: {
               };
           onDeleteHandle?: string;
         },
-        any
+        any,
+        Name
       >;
       findMany: FunctionReference<
         "query",
@@ -560,7 +504,8 @@ export declare const components: {
               | null;
           }>;
         },
-        any
+        any,
+        Name
       >;
       findOne: FunctionReference<
         "query",
@@ -593,7 +538,8 @@ export declare const components: {
               | null;
           }>;
         },
-        any
+        any,
+        Name
       >;
       updateMany: FunctionReference<
         "mutation",
@@ -825,7 +771,8 @@ export declare const components: {
             numItems: number;
           };
         },
-        any
+        any,
+        Name
       >;
       updateOne: FunctionReference<
         "mutation",
@@ -1049,8 +996,8 @@ export declare const components: {
               };
           onUpdateHandle?: string;
         },
-        any
+        any,
+        Name
       >;
     };
   };
-};

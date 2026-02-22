@@ -4,8 +4,8 @@ import { v } from "convex/values";
 export default defineSchema({
   // User projects - container for a design endeavor
   projects: defineTable({
-    sessionId: v.optional(v.string()),
     userId: v.optional(v.string()),
+    sessionId: v.optional(v.string()), // legacy: kept for backward compat with old anonymous sessions
     name: v.string(),
     description: v.optional(v.string()),
     status: v.optional(v.string()),
@@ -29,7 +29,7 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_session", ["sessionId"]),
+    .index("by_user", ["userId"]),
 
   // Individual rooms within a project
   rooms: defineTable({
@@ -189,7 +189,8 @@ export default defineSchema({
 
   // Style quiz responses for discovery
   styleQuizResponses: defineTable({
-    sessionId: v.string(),
+    userId: v.optional(v.string()),
+    sessionId: v.optional(v.string()), // legacy: kept for backward compat
     emotionalVibe: v.optional(v.string()), // serenity | energy | cozy | order
     visualAnchor: v.optional(v.string()), // modern | traditional | bohemian | industrial
     decorDensity: v.optional(v.string()), // purist | curator | collector
@@ -205,11 +206,12 @@ export default defineSchema({
     createdAt: v.number(),
     completedAt: v.optional(v.number()),
   })
-    .index("by_session", ["sessionId"]),
+    .index("by_user", ["userId"]),
 
   // Rate limiting to prevent API abuse
   rateLimits: defineTable({
-    sessionId: v.string(),
+    userId: v.optional(v.string()),
+    sessionId: v.optional(v.string()), // legacy: kept for backward compat
     operation: v.union(
       v.literal("analysis"),
       v.literal("recommendations"),
@@ -219,5 +221,5 @@ export default defineSchema({
     windowStart: v.number(),
     lastReset: v.number(),
   })
-    .index("by_session_operation", ["sessionId", "operation"]),
+    .index("by_user_operation", ["userId", "operation"]),
 });

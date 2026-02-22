@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useLocalSession } from "@/lib/hooks/use-local-session";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -37,7 +37,8 @@ interface CalculatedStyle {
 }
 
 export default function DiscoverPage() {
-  const sessionId = useLocalSession();
+  const router = useRouter();
+  const { data: session } = authClient.useSession();
   const saveQuiz = useMutation(api.styleQuiz.save);
 
   const [step, setStep] = useState<Step>("intro");
@@ -61,15 +62,12 @@ export default function DiscoverPage() {
   };
 
   const handleComplete = async (finalResponses: QuizResponses) => {
-    if (!sessionId) return;
-
     // Calculate style locally
     const calculated = calculateStyle(finalResponses);
     setCalculatedStyle(calculated);
 
     // Save to backend
     await saveQuiz({
-      sessionId,
       emotionalVibe: finalResponses.emotionalVibe,
       visualAnchor: finalResponses.visualAnchor,
       decorDensity: finalResponses.decorDensity,
@@ -78,14 +76,6 @@ export default function DiscoverPage() {
 
     setStep("results");
   };
-
-  if (!sessionId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-text-tertiary">Loading...</p>
-      </div>
-    );
-  }
 
   const renderQuestion = (
     questionData: typeof EMOTIONAL_VIBE_QUESTION,

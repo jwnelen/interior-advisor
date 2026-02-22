@@ -4,8 +4,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Navbar } from "@/components/navbar";
+import { authClient } from "@/lib/auth-client";
 
 export default function LandingPage() {
+  const { data: session } = authClient.useSession();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-surface-page to-surface-elevated">
       <Navbar />
@@ -22,16 +25,26 @@ export default function LandingPage() {
             design guidance, without the designer fees.
           </p>
           <div className="flex gap-4 justify-center">
-            <Link href="/discover">
-              <Button size="lg" className="text-lg px-8">
-                Discover Your Style
-              </Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button size="lg" variant="outline" className="text-lg px-8">
-                Start a Project
-              </Button>
-            </Link>
+            {session ? (
+              <>
+                <Link href="/discover">
+                  <Button size="lg" className="text-lg px-8">
+                    Discover Your Style
+                  </Button>
+                </Link>
+                <Link href="/dashboard">
+                  <Button size="lg" variant="outline" className="text-lg px-8">
+                    My Projects
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <Link href="/sign-in">
+                <Button size="lg" className="text-lg px-8">
+                  Get Started
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -160,12 +173,12 @@ export default function LandingPage() {
         <div className="mt-24 text-center bg-cta-bg text-cta-text rounded-2xl p-12">
           <h3 className="text-3xl font-bold mb-4">Ready to Transform Your Space?</h3>
           <p className="text-cta-muted mb-8 max-w-xl mx-auto">
-            Start with a free style discovery quiz or jump right into creating
-            your first project. No account required.
+            Sign in with your email to start your style discovery quiz and
+            create your first design project.
           </p>
-          <Link href="/discover">
+          <Link href={session ? "/discover" : "/sign-in"}>
             <Button size="lg" variant="secondary" className="text-lg px-8">
-              Get Started Free
+              {session ? "Start Discovering" : "Get Started"}
             </Button>
           </Link>
         </div>

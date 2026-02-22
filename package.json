@@ -9,8 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@convex-dev/better-auth": "^0.10.10",
     "@sentry/nextjs": "^10.38.0",
     "@vercel/analytics": "^1.6.1",
+    "better-auth": "1.4.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.31.7",
@@ -22,6 +24,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "replicate": "^1.4.0",
+    "resend": "^6.9.2",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "uuid": "^13.0.0"

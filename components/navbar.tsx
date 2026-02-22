@@ -1,18 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useLocalSession } from "@/lib/hooks/use-local-session";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function Navbar() {
-  const sessionId = useLocalSession();
-  const projects = useQuery(
-    api.projects.list,
-    sessionId ? { sessionId } : "skip"
-  );
+  const router = useRouter();
+  const { data: session } = authClient.useSession();
+  const projects = useQuery(api.projects.list, session ? {} : "skip");
 
   const hasProjects = projects !== undefined && projects.length > 0;
   const logoHref = hasProjects ? "/dashboard" : "/";
@@ -26,7 +25,7 @@ export function Navbar() {
           </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            {hasProjects ? (
+            {session ? (
               <>
                 <Link href="/style">
                   <Button variant="ghost">My Style</Button>
@@ -34,16 +33,20 @@ export function Navbar() {
                 <Link href="/dashboard">
                   <Button variant="outline">My Projects</Button>
                 </Link>
+                <Button
+                  variant="ghost"
+                  onClick={async () => {
+                    await authClient.signOut();
+                    router.push("/sign-in");
+                  }}
+                >
+                  Sign Out
+                </Button>
               </>
             ) : (
-              <>
-                <Link href="/discover">
-                  <Button variant="ghost">Discover Your Style</Button>
-                </Link>
-                <Link href="/dashboard">
-                  <Button variant="outline">My Projects</Button>
-                </Link>
-              </>
+              <Link href="/sign-in">
+                <Button>Sign In</Button>
+              </Link>
             )}
           </div>
         </nav>

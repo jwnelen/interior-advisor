@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useLocalSession } from "@/lib/hooks/use-local-session";
+import { authClient } from "@/lib/auth-client";
 import type { Project } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Navbar } from "@/components/navbar";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 // Helper functions for building style profile
 const STYLE_COLOR_PALETTES: Record<string, string[]> = {
@@ -109,17 +110,21 @@ function derivePriorities(calculatedStyle: {
 }
 
 export default function DashboardPage() {
-  const sessionId = useLocalSession();
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
   const projects = useQuery(
     api.projects.list,
-    sessionId ? { sessionId } : "skip"
+    session ? {} : "skip"
   );
-  const styleQuiz = useQuery(
-    api.styleQuiz.getBySession,
-    sessionId ? { sessionId } : "skip"
-  );
+  const styleQuiz = useQuery(api.styleQuiz.get);
   const createProject = useMutation(api.projects.create);
   const deleteProject = useMutation(api.projects.remove);
+
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push("/sign-in");
+    }
+  }, [session, isPending, router]);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newProject, setNewProject] = useState({
@@ -129,7 +134,7 @@ export default function DashboardPage() {
   });
 
   const handleCreateProject = async () => {
-    if (!sessionId || !newProject.name) return;
+    if (!newProject.name) return;
 
     // Ensure user has a style profile
     if (!styleQuiz?.calculatedStyle) {
@@ -152,7 +157,6 @@ export default function DashboardPage() {
 
     try {
       await createProject({
-        sessionId,
         name: newProject.name,
         description: newProject.description || undefined,
         budget: newProject.budget
@@ -180,7 +184,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (!sessionId) {
+  if (isPending || !session) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-text-tertiary">Loading...</p>
@@ -373,7 +377,7 @@ export default function DashboardPage() {
                           <AlertDialogAction
                             onClick={async () => {
                               try {
-                                await deleteProject({ id: project._id, sessionId });
+                                await deleteProject({ id: project._id });
                                 toast.success("Project deleted");
                               } catch (error) {
                                 console.error("Failed to delete project:", error);
