@@ -5,13 +5,15 @@ import {
   validateNoXSS,
   validateBudget,
 } from "./lib/validators";
+import { requireUserId } from "./auth";
 
 export const list = query({
-  args: { sessionId: v.string() },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireUserId(ctx);
     return await ctx.db
       .query("projects")
-      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc")
       .collect();
   },
@@ -25,13 +27,14 @@ export const get = internalQuery({
 });
 
 export const getPublic = query({
-  args: { id: v.id("projects"), sessionId: v.string() },
+  args: { id: v.id("projects") },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     const project = await ctx.db.get(args.id);
     if (!project) return null;
 
     // Verify ownership
-    if (project.sessionId !== args.sessionId) {
+    if (project.userId !== userId) {
       throw new Error("Unauthorized");
     }
 
@@ -41,7 +44,6 @@ export const getPublic = query({
 
 export const create = mutation({
   args: {
-    sessionId: v.string(),
     name: v.string(),
     description: v.optional(v.string()),
     budget: v.optional(v.object({
@@ -51,6 +53,8 @@ export const create = mutation({
     })),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     // Validate inputs
     validateStringLength(args.name, "Project name", 1, 100);
     validateNoXSS(args.name, "Project name");
@@ -66,7 +70,7 @@ export const create = mutation({
 
     const now = Date.now();
     return await ctx.db.insert("projects", {
-      sessionId: args.sessionId,
+      userId,
       name: args.name,
       description: args.description,
       budget: args.budget,
@@ -79,7 +83,6 @@ export const create = mutation({
 export const update = mutation({
   args: {
     id: v.id("projects"),
-    sessionId: v.string(),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     budget: v.optional(v.object({
@@ -95,10 +98,12 @@ export const update = mutation({
     })),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     // Verify ownership
     const project = await ctx.db.get(args.id);
     if (!project) throw new Error("Project not found");
-    if (project.sessionId !== args.sessionId) {
+    if (project.userId !== userId) {
       throw new Error("Unauthorized");
     }
 
@@ -117,7 +122,7 @@ export const update = mutation({
       validateBudget(args.budget.total, args.budget.spent);
     }
 
-    const { id, sessionId, ...updates } = args;
+    const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined)
     );
@@ -129,12 +134,14 @@ export const update = mutation({
 });
 
 export const remove = mutation({
-  args: { id: v.id("projects"), sessionId: v.string() },
+  args: { id: v.id("projects") },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     // Verify ownership
     const project = await ctx.db.get(args.id);
     if (!project) throw new Error("Project not found");
-    if (project.sessionId !== args.sessionId) {
+    if (project.userId !== userId) {
       throw new Error("Unauthorized");
     }
 

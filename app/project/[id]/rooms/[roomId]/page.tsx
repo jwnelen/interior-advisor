@@ -8,7 +8,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import type { Recommendation } from "@/lib/types";
 import { downscaleImage } from "@/lib/utils";
-import { useLocalSession } from "@/lib/hooks/use-local-session";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,10 +29,10 @@ export default function RoomPage() {
   const params = useParams();
   const projectId = params.id as Id<"projects">;
   const roomId = params.roomId as Id<"rooms">;
-  const sessionId = useLocalSession();
+  const { data: session } = authClient.useSession();
 
-  const room = useQuery(api.rooms.getPublic, sessionId ? { id: roomId, sessionId } : "skip");
-  const project = useQuery(api.projects.getPublic, sessionId ? { id: projectId, sessionId } : "skip");
+  const room = useQuery(api.rooms.getPublic, session ? { id: roomId } : "skip");
+  const project = useQuery(api.projects.getPublic, session ? { id: projectId } : "skip");
   const analysis = useQuery(api.analyses.getByRoom, { roomId });
   const recommendations = useQuery(api.recommendations.getByRoom, { roomId });
   const customQuestions = useQuery(api.recommendations.getCustomQuestions, { roomId });
@@ -84,8 +84,7 @@ export default function RoomPage() {
           });
           if (!response.ok) throw new Error(`Upload failed with status ${response.status}`);
           const { storageId } = await response.json();
-          if (!sessionId) throw new Error("Session not found");
-          await addPhoto({ roomId, sessionId, storageId });
+          await addPhoto({ roomId, storageId });
           successCount++;
         } catch (error) {
           failCount++;
@@ -110,10 +109,9 @@ export default function RoomPage() {
   };
 
   const handleGenerateAnalysis = async () => {
-    if (!sessionId) return;
     setAnalyzingRoom(true);
     try {
-      await generateAnalysis({ roomId, sessionId });
+      await generateAnalysis({ roomId });
       toast.success("Analysis started", {
         description: "We're analyzing your room photos. This may take a minute.",
       });
@@ -128,10 +126,9 @@ export default function RoomPage() {
   };
 
   const handleGenerateRecommendations = async (tier: "quick_wins" | "transformations") => {
-    if (!sessionId) return;
     setGenerating(tier);
     try {
-      await generateRecommendations({ roomId, tier, sessionId });
+      await generateRecommendations({ roomId, tier });
       toast.success("Generating recommendations", {
         description: `Creating ${tier === "quick_wins" ? "quick win" : "transformation"} suggestions...`,
       });
@@ -168,14 +165,13 @@ export default function RoomPage() {
   };
 
   const handleGenerateVisualization = async () => {
-    if (!visualizationPrompt || !sessionId) return;
+    if (!visualizationPrompt) return;
     try {
       await generateVisualization({
         roomId,
         prompt: visualizationPrompt,
         type: "full_render",
         photoStorageId: selectedPhotoStorageId ?? undefined,
-        sessionId,
       });
       setShowVisDialog(false);
       setVisualizationPrompt("");
@@ -277,8 +273,7 @@ export default function RoomPage() {
               fileInputRef={fileInputRef}
               onFileUpload={handleFileUpload}
               onRemovePhoto={(args) => {
-                if (!sessionId) return;
-                removePhoto({ ...args, sessionId });
+                removePhoto(args);
               }}
             />
             <AnalysisCard

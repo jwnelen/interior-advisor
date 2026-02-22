@@ -6,6 +6,7 @@ import {
   validateDimensions,
   validateRoomType,
 } from "./lib/validators";
+import { requireUserId } from "./auth";
 
 export const list = query({
   args: { projectId: v.id("projects") },
@@ -25,14 +26,15 @@ export const get = internalQuery({
 });
 
 export const getPublic = query({
-  args: { id: v.id("rooms"), sessionId: v.string() },
+  args: { id: v.id("rooms") },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     const room = await ctx.db.get(args.id);
     if (!room) return null;
 
     // Verify ownership via project
     const project = await ctx.db.get(room.projectId);
-    if (!project || project.sessionId !== args.sessionId) {
+    if (!project || project.userId !== userId) {
       throw new Error("Unauthorized");
     }
 
@@ -43,7 +45,6 @@ export const getPublic = query({
 export const create = mutation({
   args: {
     projectId: v.id("projects"),
-    sessionId: v.string(),
     name: v.string(),
     type: v.string(),
     dimensions: v.optional(v.object({
@@ -55,10 +56,12 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     // Verify ownership of project
     const project = await ctx.db.get(args.projectId);
     if (!project) throw new Error("Project not found");
-    if (project.sessionId !== args.sessionId) {
+    if (project.userId !== userId) {
       throw new Error("Unauthorized");
     }
 
@@ -97,7 +100,6 @@ export const create = mutation({
 export const update = mutation({
   args: {
     id: v.id("rooms"),
-    sessionId: v.string(),
     name: v.optional(v.string()),
     type: v.optional(v.string()),
     dimensions: v.optional(v.object({
@@ -109,12 +111,14 @@ export const update = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     // Verify ownership
     const room = await ctx.db.get(args.id);
     if (!room) throw new Error("Room not found");
 
     const project = await ctx.db.get(room.projectId);
-    if (!project || project.sessionId !== args.sessionId) {
+    if (!project || project.userId !== userId) {
       throw new Error("Unauthorized");
     }
 
@@ -141,7 +145,7 @@ export const update = mutation({
       );
     }
 
-    const { id, sessionId, ...updates } = args;
+    const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined)
     );
@@ -153,14 +157,16 @@ export const update = mutation({
 });
 
 export const remove = mutation({
-  args: { id: v.id("rooms"), sessionId: v.string() },
+  args: { id: v.id("rooms") },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     // Verify ownership
     const room = await ctx.db.get(args.id);
     if (!room) throw new Error("Room not found");
 
     const project = await ctx.db.get(room.projectId);
-    if (!project || project.sessionId !== args.sessionId) {
+    if (!project || project.userId !== userId) {
       throw new Error("Unauthorized");
     }
 
@@ -202,16 +208,17 @@ export const remove = mutation({
 export const addPhoto = mutation({
   args: {
     roomId: v.id("rooms"),
-    sessionId: v.string(),
     storageId: v.id("_storage"),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     // Verify ownership
     const room = await ctx.db.get(args.roomId);
     if (!room) throw new Error("Room not found");
 
     const project = await ctx.db.get(room.projectId);
-    if (!project || project.sessionId !== args.sessionId) {
+    if (!project || project.userId !== userId) {
       throw new Error("Unauthorized");
     }
 
@@ -237,15 +244,16 @@ export const removePhoto = mutation({
   args: {
     roomId: v.id("rooms"),
     storageId: v.id("_storage"),
-    sessionId: v.string(),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     // Verify ownership
     const room = await ctx.db.get(args.roomId);
     if (!room) throw new Error("Room not found");
 
     const project = await ctx.db.get(room.projectId);
-    if (!project || project.sessionId !== args.sessionId) {
+    if (!project || project.userId !== userId) {
       throw new Error("Unauthorized");
     }
 
@@ -262,6 +270,7 @@ export const removePhoto = mutation({
 
 export const generateUploadUrl = mutation({
   handler: async (ctx) => {
+    await requireUserId(ctx);
     return await ctx.storage.generateUploadUrl();
   },
 });

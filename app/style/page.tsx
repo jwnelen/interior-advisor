@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useLocalSession } from "@/lib/hooks/use-local-session";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -14,19 +14,11 @@ import {
 } from "@/lib/style-data";
 
 export default function StylePage() {
-  const sessionId = useLocalSession();
+  const { data: session } = authClient.useSession();
   const quizData = useQuery(
-    api.styleQuiz.getBySession,
-    sessionId ? { sessionId } : "skip"
+    api.styleQuiz.get,
+    session ? {} : "skip"
   );
-
-  if (!sessionId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-text-tertiary">Loading...</p>
-      </div>
-    );
-  }
 
   const style = quizData?.calculatedStyle;
 

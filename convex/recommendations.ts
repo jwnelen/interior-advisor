@@ -2,10 +2,19 @@ import { v } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { checkRateLimit, incrementRateLimit } from "./lib/rateLimiting";
+import { requireUserId } from "./auth";
 
 export const getByRoom = query({
   args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
+    // Verify ownership via room → project
+    const room = await ctx.db.get(args.roomId);
+    if (!room) return [];
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.userId !== userId) return [];
+
     return await ctx.db
       .query("recommendations")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -16,6 +25,14 @@ export const getByRoom = query({
 export const getCustomQuestions = query({
   args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
+    // Verify ownership via room → project
+    const room = await ctx.db.get(args.roomId);
+    if (!room) return [];
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.userId !== userId) return [];
+
     return await ctx.db
       .query("recommendations")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -28,10 +45,19 @@ export const getCustomQuestions = query({
 export const deleteCustomQuestion = mutation({
   args: { id: v.id("recommendations") },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     const rec = await ctx.db.get(args.id);
     if (!rec || rec.tier !== "custom_question") {
       throw new Error("Not a custom question recommendation");
     }
+
+    // Verify ownership via room → project
+    const room = await ctx.db.get(rec.roomId);
+    if (!room) throw new Error("Room not found");
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.userId !== userId) throw new Error("Unauthorized");
+
     await ctx.db.delete(args.id);
   },
 });
@@ -42,6 +68,14 @@ export const askCustomQuestion = mutation({
     question: v.string(),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
+    // Verify ownership via room → project
+    const room = await ctx.db.get(args.roomId);
+    if (!room) throw new Error("Room not found");
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.userId !== userId) throw new Error("Unauthorized");
+
     const analysis = await ctx.db
       .query("analyses")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -79,11 +113,12 @@ export const generate = mutation({
   args: {
     roomId: v.id("rooms"),
     tier: v.union(v.literal("quick_wins"), v.literal("transformations")),
-    sessionId: v.string(),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     // Check rate limit
-    const rateLimitError = await checkRateLimit(ctx, args.sessionId, "recommendations");
+    const rateLimitError = await checkRateLimit(ctx, userId, "recommendations");
     if (rateLimitError) {
       throw new Error(rateLimitError);
     }
@@ -93,7 +128,7 @@ export const generate = mutation({
     if (!room) throw new Error("Room not found");
 
     const project = await ctx.db.get(room.projectId);
-    if (!project || project.sessionId !== args.sessionId) {
+    if (!project || project.userId !== userId) {
       throw new Error("Unauthorized");
     }
 
@@ -142,7 +177,7 @@ export const generate = mutation({
     });
 
     // Increment rate limit after successful scheduling
-    await incrementRateLimit(ctx, args.sessionId, "recommendations");
+    await incrementRateLimit(ctx, userId, "recommendations");
 
     return recommendationId;
   },
@@ -206,8 +241,16 @@ export const toggleItemSelection = mutation({
     selected: v.boolean(),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     const rec = await ctx.db.get(args.id);
     if (!rec) throw new Error("Recommendation not found");
+
+    // Verify ownership via room → project
+    const room = await ctx.db.get(rec.roomId);
+    if (!room) throw new Error("Room not found");
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.userId !== userId) throw new Error("Unauthorized");
 
     const items = rec.items.map((item) =>
       item.id === args.itemId ? { ...item, selected: args.selected } : item
@@ -223,6 +266,14 @@ export const regenerate = mutation({
     tier: v.union(v.literal("quick_wins"), v.literal("transformations")),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
+    // Verify ownership via room → project
+    const room = await ctx.db.get(args.roomId);
+    if (!room) throw new Error("Room not found");
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.userId !== userId) throw new Error("Unauthorized");
+
     const analysis = await ctx.db
       .query("analyses")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))

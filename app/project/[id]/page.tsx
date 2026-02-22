@@ -41,14 +41,14 @@ import {
 import { ROOM_TYPES } from "@/lib/constants";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { toast } from "sonner";
-import { useLocalSession } from "@/lib/hooks/use-local-session";
+import { authClient } from "@/lib/auth-client";
 
 export default function ProjectPage() {
   const params = useParams();
   const projectId = params.id as Id<"projects">;
-  const sessionId = useLocalSession();
+  const { data: session } = authClient.useSession();
 
-  const project = useQuery(api.projects.getPublic, sessionId ? { id: projectId, sessionId } : "skip");
+  const project = useQuery(api.projects.getPublic, session ? { id: projectId } : "skip");
   const rooms = useQuery(api.rooms.list, { projectId });
   const createRoom = useMutation(api.rooms.create);
   const deleteRoom = useMutation(api.rooms.remove);
@@ -61,12 +61,11 @@ export default function ProjectPage() {
   });
 
   const handleCreateRoom = async () => {
-    if (!newRoom.name || !newRoom.type || !sessionId) return;
+    if (!newRoom.name || !newRoom.type) return;
 
     try {
       await createRoom({
         projectId,
-        sessionId,
         name: newRoom.name,
         type: newRoom.type,
         notes: newRoom.notes || undefined,
@@ -350,9 +349,8 @@ export default function ProjectPage() {
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={async () => {
-                              if (!sessionId) return;
                               try {
-                                await deleteRoom({ id: room._id, sessionId });
+                                await deleteRoom({ id: room._id });
                                 toast.success("Room deleted");
                               } catch (error) {
                                 console.error("Failed to delete room:", error);

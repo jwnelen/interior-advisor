@@ -3,10 +3,19 @@ import { query, mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { checkRateLimit, incrementRateLimit } from "./lib/rateLimiting";
 import { validatePrompt } from "./lib/validators";
+import { requireUserId } from "./auth";
 
 export const getByRoom = query({
   args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
+    // Verify ownership via room → project
+    const room = await ctx.db.get(args.roomId);
+    if (!room) return [];
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.userId !== userId) return [];
+
     return await ctx.db
       .query("visualizations")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -29,11 +38,12 @@ export const generate = mutation({
     photoStorageId: v.optional(v.id("_storage")),
     controlNetMode: v.optional(v.string()),
     strength: v.optional(v.number()),
-    sessionId: v.string(),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     // Check rate limit
-    const rateLimitError = await checkRateLimit(ctx, args.sessionId, "visualization");
+    const rateLimitError = await checkRateLimit(ctx, userId, "visualization");
     if (rateLimitError) {
       throw new Error(rateLimitError);
     }
@@ -43,7 +53,7 @@ export const generate = mutation({
     if (!room) throw new Error("Room not found");
 
     const project = await ctx.db.get(room.projectId);
-    if (!project || project.sessionId !== args.sessionId) {
+    if (!project || project.userId !== userId) {
       throw new Error("Unauthorized");
     }
 
@@ -78,7 +88,7 @@ export const generate = mutation({
     });
 
     // Increment rate limit after successful scheduling
-    await incrementRateLimit(ctx, args.sessionId, "visualization");
+    await incrementRateLimit(ctx, userId, "visualization");
 
     return visualizationId;
   },
@@ -136,8 +146,18 @@ export const fail = internalMutation({
 export const remove = mutation({
   args: { id: v.id("visualizations") },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     const vis = await ctx.db.get(args.id);
-    if (vis?.output?.storageId) {
+    if (!vis) throw new Error("Visualization not found");
+
+    // Verify ownership via room → project
+    const room = await ctx.db.get(vis.roomId);
+    if (!room) throw new Error("Room not found");
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.userId !== userId) throw new Error("Unauthorized");
+
+    if (vis.output?.storageId) {
       await ctx.storage.delete(vis.output.storageId);
     }
     await ctx.db.delete(args.id);

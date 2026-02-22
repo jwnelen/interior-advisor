@@ -1,13 +1,15 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
+import { requireUserId } from "./auth";
 
-export const getBySession = query({
-  args: { sessionId: v.string() },
-  handler: async (ctx, args) => {
+export const get = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireUserId(ctx);
     return await ctx.db
       .query("styleQuizResponses")
-      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc")
       .first();
   },
@@ -15,16 +17,17 @@ export const getBySession = query({
 
 export const save = mutation({
   args: {
-    sessionId: v.string(),
     emotionalVibe: v.optional(v.string()),
     visualAnchor: v.optional(v.string()),
     decorDensity: v.optional(v.string()),
     colorPattern: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     const existing = await ctx.db
       .query("styleQuizResponses")
-      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
     // Calculate style profile
@@ -51,7 +54,7 @@ export const save = mutation({
       responseId = existing._id;
     } else {
       responseId = await ctx.db.insert("styleQuizResponses", {
-        sessionId: args.sessionId,
+        userId,
         emotionalVibe: args.emotionalVibe,
         visualAnchor: args.visualAnchor,
         decorDensity: args.decorDensity,
@@ -63,7 +66,7 @@ export const save = mutation({
     }
 
     // Apply style profile to all user projects
-    await applyStyleProfileToProjects(ctx, args.sessionId, styleProfile);
+    await applyStyleProfileToProjects(ctx, userId, styleProfile);
 
     return responseId;
   },
@@ -265,12 +268,12 @@ function derivePriorities(calculatedStyle: CalculatedStyle): string[] {
 
 async function applyStyleProfileToProjects(
   ctx: MutationCtx,
-  sessionId: string,
+  userId: string,
   styleProfile: StyleProfile
 ) {
   const projects = await ctx.db
     .query("projects")
-    .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+    .withIndex("by_user", (q) => q.eq("userId", userId))
     .collect();
 
   for (const project of projects) {
