@@ -49,6 +49,12 @@ export const create = mutation({
       spent: v.number(),
       currency: v.string(),
     })),
+    styleProfile: v.object({
+      primaryStyle: v.string(),
+      secondaryStyle: v.optional(v.string()),
+      colorPreferences: v.array(v.string()),
+      priorities: v.array(v.string()),
+    }),
   },
   handler: async (ctx, args) => {
     // Validate inputs
@@ -70,6 +76,7 @@ export const create = mutation({
       name: args.name,
       description: args.description,
       budget: args.budget,
+      styleProfile: args.styleProfile,
       createdAt: now,
       updatedAt: now,
     });
