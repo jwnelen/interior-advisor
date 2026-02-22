@@ -4,8 +4,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { authClient } from "@/lib/auth-client";
 
 export default function LandingPage() {
+  const { data: session } = authClient.useSession();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-surface-page to-surface-elevated">
       {/* Header */}
@@ -14,12 +17,20 @@ export default function LandingPage() {
           <h1 className="text-2xl font-bold text-text-primary">Interior Advisor</h1>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link href="/style">
-              <Button variant="ghost">My Style</Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="outline">My Projects</Button>
-            </Link>
+            {session ? (
+              <>
+                <Link href="/style">
+                  <Button variant="ghost">My Style</Button>
+                </Link>
+                <Link href="/dashboard">
+                  <Button variant="outline">My Projects</Button>
+                </Link>
+              </>
+            ) : (
+              <Link href="/sign-in">
+                <Button>Sign In</Button>
+              </Link>
+            )}
           </div>
         </nav>
       </header>
@@ -36,16 +47,26 @@ export default function LandingPage() {
             design guidance, without the designer fees.
           </p>
           <div className="flex gap-4 justify-center">
-            <Link href="/discover">
-              <Button size="lg" className="text-lg px-8">
-                Discover Your Style
-              </Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button size="lg" variant="outline" className="text-lg px-8">
-                Start a Project
-              </Button>
-            </Link>
+            {session ? (
+              <>
+                <Link href="/discover">
+                  <Button size="lg" className="text-lg px-8">
+                    Discover Your Style
+                  </Button>
+                </Link>
+                <Link href="/dashboard">
+                  <Button size="lg" variant="outline" className="text-lg px-8">
+                    My Projects
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <Link href="/sign-in">
+                <Button size="lg" className="text-lg px-8">
+                  Get Started
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -174,12 +195,12 @@ export default function LandingPage() {
         <div className="mt-24 text-center bg-cta-bg text-cta-text rounded-2xl p-12">
           <h3 className="text-3xl font-bold mb-4">Ready to Transform Your Space?</h3>
           <p className="text-cta-muted mb-8 max-w-xl mx-auto">
-            Start with a free style discovery quiz or jump right into creating
-            your first project. No account required.
+            Sign in with your email to start your style discovery quiz and
+            create your first design project.
           </p>
-          <Link href="/discover">
+          <Link href={session ? "/discover" : "/sign-in"}>
             <Button size="lg" variant="secondary" className="text-lg px-8">
-              Get Started Free
+              {session ? "Start Discovering" : "Get Started"}
             </Button>
           </Link>
         </div>

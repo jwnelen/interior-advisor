@@ -3,7 +3,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 export interface Project {
   _id: Id<"projects">;
   _creationTime: number;
-  sessionId: string;
+  userId: string;
   name: string;
   description?: string;
   budget?: {
@@ -144,24 +144,18 @@ export interface Visualization {
 export interface StyleQuizResponse {
   _id: Id<"styleQuizResponses">;
   _creationTime: number;
-  sessionId: string;
-  responses: {
-    questionId: string;
-    selectedOption: string;
-  }[];
-  moodBoardSelections: string[];
-  preferences: {
-    comfort: number;
-    aesthetics: number;
-    minimal: number;
-    cozy: number;
-    modern: number;
-    traditional: number;
-  };
+  userId: string;
+  emotionalVibe?: string;
+  visualAnchor?: string;
+  decorDensity?: string;
+  colorPattern?: string;
   calculatedStyle?: {
     primaryStyle: string;
     secondaryStyle?: string;
     description: string;
+    emotionalVibe: string;
+    decorDensity: string;
+    colorPattern: string;
   };
   createdAt: number;
   completedAt?: number;

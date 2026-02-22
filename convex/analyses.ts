@@ -2,10 +2,19 @@ import { v } from "convex/values";
 import { query, mutation, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { checkRateLimit, incrementRateLimit } from "./lib/rateLimiting";
+import { requireUserId } from "./auth";
 
 export const getByRoom = query({
   args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
+    // Verify ownership via room → project
+    const room = await ctx.db.get(args.roomId);
+    if (!room) return null;
+    const project = await ctx.db.get(room.projectId);
+    if (!project || project.userId !== userId) return null;
+
     return await ctx.db
       .query("analyses")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -108,10 +117,12 @@ export const fail = internalMutation({
 });
 
 export const generate = mutation({
-  args: { roomId: v.id("rooms"), sessionId: v.string() },
+  args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+
     // Check rate limit
-    const rateLimitError = await checkRateLimit(ctx, args.sessionId, "analysis");
+    const rateLimitError = await checkRateLimit(ctx, userId, "analysis");
     if (rateLimitError) {
       throw new Error(rateLimitError);
     }
@@ -121,7 +132,7 @@ export const generate = mutation({
     if (!room) throw new Error("Room not found");
 
     const project = await ctx.db.get(room.projectId);
-    if (!project || project.sessionId !== args.sessionId) {
+    if (!project || project.userId !== userId) {
       throw new Error("Unauthorized");
     }
 
@@ -157,7 +168,7 @@ export const generate = mutation({
     });
 
     // Increment rate limit after successful scheduling
-    await incrementRateLimit(ctx, args.sessionId, "analysis");
+    await incrementRateLimit(ctx, userId, "analysis");
 
     return analysisId;
   },

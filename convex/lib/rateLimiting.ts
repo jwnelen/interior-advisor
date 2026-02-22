@@ -1,6 +1,6 @@
 import { QueryCtx, MutationCtx } from "../_generated/server";
 
-// Rate limits per operation per session per hour
+// Rate limits per operation per user per hour
 const RATE_LIMITS = {
   analysis: 10,
   recommendations: 20,
@@ -12,12 +12,12 @@ type Operation = keyof typeof RATE_LIMITS;
 const WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 /**
- * Check if a session has exceeded their rate limit for an operation
+ * Check if a user has exceeded their rate limit for an operation
  * @returns null if allowed, error message if rate limit exceeded
  */
 export async function checkRateLimit(
   ctx: QueryCtx | MutationCtx,
-  sessionId: string,
+  userId: string,
   operation: Operation
 ): Promise<string | null> {
   const now = Date.now();
@@ -26,8 +26,8 @@ export async function checkRateLimit(
   // Find existing rate limit record
   const existing = await ctx.db
     .query("rateLimits")
-    .withIndex("by_session_operation", (q) =>
-      q.eq("sessionId", sessionId).eq("operation", operation)
+    .withIndex("by_user_operation", (q) =>
+      q.eq("userId", userId).eq("operation", operation)
     )
     .first();
 
@@ -53,26 +53,26 @@ export async function checkRateLimit(
 }
 
 /**
- * Increment the rate limit counter for a session/operation
+ * Increment the rate limit counter for a user/operation
  */
 export async function incrementRateLimit(
   ctx: MutationCtx,
-  sessionId: string,
+  userId: string,
   operation: Operation
 ): Promise<void> {
   const now = Date.now();
 
   const existing = await ctx.db
     .query("rateLimits")
-    .withIndex("by_session_operation", (q) =>
-      q.eq("sessionId", sessionId).eq("operation", operation)
+    .withIndex("by_user_operation", (q) =>
+      q.eq("userId", userId).eq("operation", operation)
     )
     .first();
 
   if (!existing) {
     // Create new rate limit record
     await ctx.db.insert("rateLimits", {
-      sessionId,
+      userId,
       operation,
       count: 1,
       windowStart: now,
