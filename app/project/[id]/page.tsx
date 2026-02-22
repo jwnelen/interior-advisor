@@ -39,7 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ROOM_TYPES } from "@/lib/constants";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Navbar } from "@/components/navbar";
 import { toast } from "sonner";
 import { useLocalSession } from "@/lib/hooks/use-local-session";
 
