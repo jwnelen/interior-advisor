@@ -27,9 +27,15 @@ export function Navbar() {
             <ThemeToggle />
             {session ? (
               <>
-                <Link href="/style">
-                  <Button variant="ghost">My Style</Button>
-                </Link>
+                {hasProjects ? (
+                  <Link href="/style">
+                    <Button variant="ghost">My Style</Button>
+                  </Link>
+                ) : (
+                  <Link href="/discover">
+                    <Button variant="ghost">Discover Your Style</Button>
+                  </Link>
+                )}
                 <Link href="/dashboard">
                   <Button variant="outline">My Projects</Button>
                 </Link>
