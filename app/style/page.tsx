@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { useLocalSession } from "@/lib/hooks/use-local-session";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Navbar } from "@/components/navbar";
 import {
   STYLE_DESCRIPTIONS,
   STYLE_COLOR_PALETTES,
@@ -32,22 +32,7 @@ export default function StylePage() {
 
   return (
     <div className="min-h-screen bg-surface-page">
-      {/* Header */}
-      <header className="bg-surface-elevated border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-text-primary">
-              Interior Advisor
-            </Link>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <Link href="/dashboard">
-                <Button variant="outline">My Projects</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="container mx-auto px-4 py-8">
         {quizData === undefined ? (

@@ -4,7 +4,8 @@ import { v } from "convex/values";
 export default defineSchema({
   // User projects - container for a design endeavor
   projects: defineTable({
-    sessionId: v.string(),
+    sessionId: v.optional(v.string()),
+    userId: v.optional(v.string()),
     name: v.string(),
     description: v.optional(v.string()),
     status: v.optional(v.string()),

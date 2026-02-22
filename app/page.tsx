@@ -3,26 +3,12 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Navbar } from "@/components/navbar";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-surface-page to-surface-elevated">
-      {/* Header */}
-      <header className="container mx-auto px-4 py-6">
-        <nav className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-text-primary">Interior Advisor</h1>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <Link href="/style">
-              <Button variant="ghost">My Style</Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="outline">My Projects</Button>
-            </Link>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <main className="container mx-auto px-4 py-16">
