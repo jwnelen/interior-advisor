@@ -37,7 +37,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
           const resend = new Resend(process.env.RESEND_API_KEY);
           await resend.emails.send({
             // Update this to your verified Resend domain for production
-            from: "Interior Advisor <onboarding@resend.dev>",
+            from: "Interior Advisor <noreply@jeroennelen.nl>",
             to: email,
             subject: "Your sign-in link for Interior Advisor",
             html: `
