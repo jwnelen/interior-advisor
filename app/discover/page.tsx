@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -37,8 +36,6 @@ interface CalculatedStyle {
 }
 
 export default function DiscoverPage() {
-  const router = useRouter();
-  const { data: session } = authClient.useSession();
   const saveQuiz = useMutation(api.styleQuiz.save);
 
   const [step, setStep] = useState<Step>("intro");

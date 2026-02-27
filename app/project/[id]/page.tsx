@@ -105,49 +105,42 @@ export default function ProjectPage() {
 
   return (
     <div className="min-h-screen bg-surface-page">
-      {/* Header */}
-      <header className="bg-surface-elevated border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard" className="text-text-tertiary hover:text-text-primary">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold">{project.name}</h1>
-                {project.description && (
-                  <p className="text-sm text-text-tertiary">{project.description}</p>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              {project.budget && (
-                <div className="text-right">
-                  <p className="text-sm text-text-tertiary">Budget</p>
-                  <p className="font-semibold">
-                    ${project.budget.total.toLocaleString()}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="container mx-auto px-4 py-8">
+        {/* Page header */}
+        <div className="flex items-center gap-4 mb-6">
+          <Link href="/dashboard" className="text-text-tertiary hover:text-text-primary">
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </Link>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold">{project.name}</h1>
+            {project.description && (
+              <p className="text-sm text-text-tertiary">{project.description}</p>
+            )}
+          </div>
+          {project.budget && (
+            <div className="text-right">
+              <p className="text-sm text-text-tertiary">Budget</p>
+              <p className="font-semibold">
+                ${project.budget.total.toLocaleString()}
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Project Info */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {project.styleProfile && (
