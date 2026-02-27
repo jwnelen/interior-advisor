@@ -6,7 +6,15 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 interface LightboxVisualization {
   originalPhotoId: Id<"_storage">;
   output?: { url: string };
-  input: { prompt: string };
+  input: {
+    prompt: string;
+    ikeaProduct?: {
+      name: string;
+      price: string;
+      imageUrl: string;
+      productUrl: string;
+    };
+  };
 }
 
 interface LightboxProps {
@@ -82,6 +90,24 @@ export function Lightbox({ visualizations, index, photos, onIndexChange }: Light
                     <div className="flex-1 flex items-center justify-center overflow-hidden">
                       <img src={currentVis.output?.url} alt="Generated visualization" className="w-full h-full object-contain rounded" />
                     </div>
+                    {currentVis.input.ikeaProduct && (
+                      <a
+                        href={currentVis.input.ikeaProduct.productUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-shrink-0 flex items-center gap-2 mt-1 px-2 py-1.5 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
+                      >
+                        <img
+                          src={currentVis.input.ikeaProduct.imageUrl}
+                          alt={currentVis.input.ikeaProduct.name}
+                          className="w-10 h-10 object-contain rounded flex-shrink-0 bg-white"
+                        />
+                        <div className="min-w-0">
+                          <p className="text-xs text-slate-200 font-medium truncate">{currentVis.input.ikeaProduct.name}</p>
+                          <p className="text-xs text-slate-400">{currentVis.input.ikeaProduct.price} · View on IKEA ↗</p>
+                        </div>
+                      </a>
+                    )}
                   </div>
                 </div>
                 <p className="text-sm text-slate-200 text-center whitespace-pre-wrap break-words px-4 flex-shrink-0">

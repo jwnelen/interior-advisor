@@ -101,6 +101,13 @@ export interface RecommendationItem {
   visualizationPrompt?: string;
   suggestedPhotoStorageId?: Id<"_storage">;
   selected?: boolean;
+  ikeaProduct?: {
+    name: string;
+    price: string;
+    imageUrl: string;
+    productUrl: string;
+    fetchedAt: number;
+  };
 }
 
 export interface Recommendation {
@@ -130,6 +137,12 @@ export interface Visualization {
     controlNetMode: string;
     strength: number;
     seed?: number;
+    ikeaProduct?: {
+      name: string;
+      price: string;
+      imageUrl: string;
+      productUrl: string;
+    };
   };
   output?: {
     storageId: Id<"_storage">;

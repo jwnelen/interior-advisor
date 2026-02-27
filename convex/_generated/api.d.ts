@@ -9,6 +9,7 @@
  */
 
 import type * as ai_advisor from "../ai/advisor.js";
+import type * as ai_ikeaSearch from "../ai/ikeaSearch.js";
 import type * as ai_imageGeneration from "../ai/imageGeneration.js";
 import type * as ai_sceneAnalysis from "../ai/sceneAnalysis.js";
 import type * as analyses from "../analyses.js";
@@ -35,6 +36,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "ai/advisor": typeof ai_advisor;
+  "ai/ikeaSearch": typeof ai_ikeaSearch;
   "ai/imageGeneration": typeof ai_imageGeneration;
   "ai/sceneAnalysis": typeof ai_sceneAnalysis;
   analyses: typeof analyses;

@@ -3,6 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { IMPACT_COLORS, DIFFICULTY_LABELS } from "@/lib/constants";
 
+interface IkeaProduct {
+  name: string;
+  price: string;
+  imageUrl: string;
+  productUrl: string;
+  fetchedAt: number;
+}
+
 interface RecommendationItemProps {
   item: {
     id: string;
@@ -16,11 +24,12 @@ interface RecommendationItemProps {
     visualizationPrompt?: string;
     suggestedPhotoStorageId?: Id<"_storage">;
     selected?: boolean;
+    ikeaProduct?: IkeaProduct;
   };
   photos: { storageId: Id<"_storage">; url: string }[];
   recommendationId: Id<"recommendations">;
   onToggle: (args: { id: Id<"recommendations">; itemId: string; selected: boolean }) => void;
-  onVisualize: () => void;
+  onVisualize: (item: { visualizationPrompt?: string; suggestedPhotoStorageId?: Id<"_storage">; ikeaProduct?: IkeaProduct }) => void;
 }
 
 export function RecommendationItem({
@@ -60,13 +69,34 @@ export function RecommendationItem({
           <p className="text-xs text-text-tertiary mt-1">{item.reasoning}</p>
         </div>
       </div>
-      <div className="flex items-center justify-between">
+      {item.ikeaProduct && (
+        <div className="mt-3 flex items-center gap-3 p-2 rounded-md border bg-muted/40">
+          <img
+            src={item.ikeaProduct.imageUrl}
+            alt={item.ikeaProduct.name}
+            className="w-12 h-12 object-contain rounded flex-shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{item.ikeaProduct.name}</p>
+            <p className="text-xs text-muted-foreground">{item.ikeaProduct.price}</p>
+          </div>
+          <a
+            href={item.ikeaProduct.productUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-600 hover:underline shrink-0"
+          >
+            View on IKEA ↗
+          </a>
+        </div>
+      )}
+      <div className="flex items-center justify-between mt-3">
         <span className="text-sm font-medium">
           ${item.estimatedCost.min} - ${item.estimatedCost.max}
         </span>
         <div className="flex gap-2">
           {item.visualizationPrompt && (
-            <Button size="sm" variant="outline" onClick={onVisualize}>
+            <Button size="sm" variant="outline" onClick={() => onVisualize(item)}>
               Visualize
             </Button>
           )}

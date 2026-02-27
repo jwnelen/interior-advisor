@@ -269,6 +269,10 @@ export const generateRecommendations = internalAction({
       });
 
       logger.info("Recommendations saved successfully");
+
+      await ctx.scheduler.runAfter(0, internal.ai.ikeaSearch.searchIkeaForRecommendations, {
+        recommendationId: args.recommendationId,
+      });
     } catch (error) {
       logger.error("Recommendation generation failed", error);
       await ctx.runMutation(internal.recommendations.fail, {
@@ -464,6 +468,10 @@ ${context}`;
           };
         }),
         summary: recommendations.summary,
+      });
+
+      await ctx.scheduler.runAfter(0, internal.ai.ikeaSearch.searchIkeaForRecommendations, {
+        recommendationId: args.recommendationId,
       });
     } catch (error) {
       console.error("Custom question answering failed:", error);

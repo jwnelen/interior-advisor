@@ -26,6 +26,7 @@ export const generateVisualization = internalAction({
     type: v.string(),
     controlNetMode: v.string(),
     strength: v.number(),
+    ikeaProductImageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const logger = createLogger("imageGeneration", {
@@ -50,6 +51,14 @@ export const generateVisualization = internalAction({
 
       logger.info("Retrieved original image URL");
 
+      // Build image_input: selected room photo + optional IKEA product image
+      const imageInput: string[] = [originalUrl];
+      if (args.ikeaProductImageUrl) {
+        imageInput.push(args.ikeaProductImageUrl);
+      }
+
+      logger.info("Built image_input", { count: imageInput.length, hasIkeaProduct: !!args.ikeaProductImageUrl });
+
       const replicateToken = process.env.REPLICATE_API_TOKEN;
       if (!replicateToken) {
         logger.error("Replicate API token not configured");
@@ -66,7 +75,7 @@ export const generateVisualization = internalAction({
           {
             input: {
               prompt: buildInteriorPrompt(args.prompt),
-              image_input: [originalUrl],
+              image_input: imageInput,
             },
           }
         ),

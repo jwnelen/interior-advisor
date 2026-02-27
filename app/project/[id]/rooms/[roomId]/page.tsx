@@ -60,6 +60,8 @@ export default function RoomPage() {
   const [visualizationPrompt, setVisualizationPrompt] = useState("");
   const [showVisDialog, setShowVisDialog] = useState(false);
   const [selectedPhotoStorageId, setSelectedPhotoStorageId] = useState<Id<"_storage"> | null>(null);
+  const [ikeaProductImageUrl, setIkeaProductImageUrl] = useState<string | null>(null);
+  const [ikeaProductForDialog, setIkeaProductForDialog] = useState<{ name: string; price: string; imageUrl: string; productUrl: string } | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("recommendations");
 
@@ -164,7 +166,7 @@ export default function RoomPage() {
     }
   };
 
-  const handleGenerateVisualization = async () => {
+  const handleGenerateVisualization = async (includeIkeaProduct: boolean) => {
     if (!visualizationPrompt) return;
     try {
       await generateVisualization({
@@ -172,10 +174,14 @@ export default function RoomPage() {
         prompt: visualizationPrompt,
         type: "full_render",
         photoStorageId: selectedPhotoStorageId ?? undefined,
+        ikeaProductImageUrl: includeIkeaProduct ? (ikeaProductImageUrl ?? undefined) : undefined,
+        ikeaProduct: includeIkeaProduct ? (ikeaProductForDialog ?? undefined) : undefined,
       });
       setShowVisDialog(false);
       setVisualizationPrompt("");
       setSelectedPhotoStorageId(null);
+      setIkeaProductImageUrl(null);
+      setIkeaProductForDialog(null);
       setActiveTab("visualizations");
       toast.success("Visualization queued", {
         description: "Your room transformation is being generated. This may take a minute.",
@@ -203,9 +209,17 @@ export default function RoomPage() {
   const openVisualizationDialog = (item?: {
     visualizationPrompt?: string;
     suggestedPhotoStorageId?: Id<"_storage">;
+    ikeaProduct?: { name: string; price: string; imageUrl: string; productUrl: string; fetchedAt: number };
   }) => {
-    setVisualizationPrompt(item?.visualizationPrompt || DEFAULT_VIS_PROMPT);
+    let prompt = item?.visualizationPrompt || DEFAULT_VIS_PROMPT;
+    if (item?.ikeaProduct && item.visualizationPrompt) {
+      prompt = `${item.visualizationPrompt} Use the IKEA product "${item.ikeaProduct.name}" (${item.ikeaProduct.price}).`;
+    }
+    setVisualizationPrompt(prompt);
     setSelectedPhotoStorageId(item?.suggestedPhotoStorageId ?? room?.photos[0]?.storageId ?? null);
+    const ikea = item?.ikeaProduct ?? null;
+    setIkeaProductImageUrl(ikea?.imageUrl ?? null);
+    setIkeaProductForDialog(ikea ? { name: ikea.name, price: ikea.price, imageUrl: ikea.imageUrl, productUrl: ikea.productUrl } : null);
     setShowVisDialog(true);
   };
 
@@ -367,6 +381,7 @@ export default function RoomPage() {
         onPromptChange={setVisualizationPrompt}
         onGenerate={handleGenerateVisualization}
         defaultPrompt={DEFAULT_VIS_PROMPT}
+        ikeaProduct={ikeaProductForDialog ?? undefined}
       />
 
       <Lightbox

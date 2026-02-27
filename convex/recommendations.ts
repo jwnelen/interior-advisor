@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, mutation, internalMutation } from "./_generated/server";
+import { query, mutation, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { checkRateLimit, incrementRateLimit } from "./lib/rateLimiting";
 import { requireUserId } from "./auth";
@@ -230,6 +230,51 @@ export const fail = internalMutation({
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
       status: "failed",
+    });
+  },
+});
+
+export const getById = internalQuery({
+  args: { id: v.id("recommendations") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
+  },
+});
+
+export const updateIkeaProducts = internalMutation({
+  args: {
+    id: v.id("recommendations"),
+    itemUpdates: v.array(v.object({
+      itemId: v.string(),
+      ikeaProduct: v.object({
+        name: v.string(),
+        price: v.string(),
+        imageUrl: v.string(),
+        productUrl: v.string(),
+        fetchedAt: v.number(),
+      }),
+    })),
+    ikeaSearchStatus: v.union(
+      v.literal("pending"),
+      v.literal("searching"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const rec = await ctx.db.get(args.id);
+    if (!rec) return;
+
+    const updateMap = new Map(args.itemUpdates.map((u) => [u.itemId, u.ikeaProduct]));
+
+    const updatedItems = rec.items.map((item) => {
+      const ikeaProduct = updateMap.get(item.id);
+      return ikeaProduct ? { ...item, ikeaProduct } : item;
+    });
+
+    await ctx.db.patch(args.id, {
+      items: updatedItems,
+      ikeaSearchStatus: args.ikeaSearchStatus,
     });
   },
 });

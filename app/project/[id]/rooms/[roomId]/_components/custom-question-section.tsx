@@ -6,6 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { RecommendationItem } from "./recommendation-item";
 
+interface IkeaProduct {
+  name: string;
+  price: string;
+  imageUrl: string;
+  productUrl: string;
+  fetchedAt: number;
+}
+
 interface CustomQuestion {
   _id: Id<"recommendations">;
   userQuestion?: string;
@@ -22,6 +30,7 @@ interface CustomQuestion {
     visualizationPrompt?: string;
     suggestedPhotoStorageId?: Id<"_storage">;
     selected?: boolean;
+    ikeaProduct?: IkeaProduct;
   }>;
   summary?: string;
 }
@@ -33,7 +42,7 @@ interface CustomQuestionSectionProps {
   onAskQuestion: (question: string) => void;
   onDeleteQuestion: (id: Id<"recommendations">) => void;
   onToggle: (args: { id: Id<"recommendations">; itemId: string; selected: boolean }) => void;
-  onVisualize: (item: { visualizationPrompt?: string; suggestedPhotoStorageId?: Id<"_storage"> }) => void;
+  onVisualize: (item: { visualizationPrompt?: string; suggestedPhotoStorageId?: Id<"_storage">; ikeaProduct?: IkeaProduct }) => void;
 }
 
 export function CustomQuestionSection({
@@ -162,7 +171,7 @@ export function CustomQuestionSection({
                         photos={photos}
                         recommendationId={customQ._id}
                         onToggle={onToggle}
-                        onVisualize={() => onVisualize(item)}
+                        onVisualize={onVisualize}
                       />
                     ))}
                   </div>

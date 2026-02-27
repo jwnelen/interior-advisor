@@ -15,6 +15,26 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "pbxt.replicate.delivery",
       },
+      {
+        protocol: "https",
+        hostname: "*.ikea.com",
+      },
+      {
+        protocol: "https",
+        hostname: "encrypted-tbn0.gstatic.com",
+      },
+      {
+        protocol: "https",
+        hostname: "encrypted-tbn1.gstatic.com",
+      },
+      {
+        protocol: "https",
+        hostname: "encrypted-tbn2.gstatic.com",
+      },
+      {
+        protocol: "https",
+        hostname: "encrypted-tbn3.gstatic.com",
+      },
     ],
   },
 
@@ -50,7 +70,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.convex.cloud",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://*.convex.cloud https://replicate.delivery https://pbxt.replicate.delivery",
+              "img-src 'self' data: blob: https://*.convex.cloud https://replicate.delivery https://pbxt.replicate.delivery https://*.ikea.com https://encrypted-tbn0.gstatic.com https://encrypted-tbn1.gstatic.com https://encrypted-tbn2.gstatic.com https://encrypted-tbn3.gstatic.com",
               "font-src 'self' data:",
               "connect-src 'self' https://*.convex.cloud https://api.openai.com https://api.replicate.com wss://*.convex.cloud https://vercel.live",
               "frame-ancestors 'none'",
