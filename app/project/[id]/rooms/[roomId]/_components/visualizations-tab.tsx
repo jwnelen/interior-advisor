@@ -43,9 +43,9 @@ export function VisualizationsTab({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <span>Generated Visualizations</span>
-          <Button size="sm" onClick={onNewVisualization} disabled={!roomHasPhotos}>
+          <Button className="w-full sm:w-auto" size="sm" onClick={onNewVisualization} disabled={!roomHasPhotos}>
             New Visualization
           </Button>
         </CardTitle>
@@ -62,13 +62,13 @@ export function VisualizationsTab({
                   }
                 />
                 <div className="p-3">
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col-reverse sm:flex-row sm:items-start gap-3">
                     <p className="text-sm text-text-secondary whitespace-pre-wrap break-words">
                       {vis.input.prompt}
                     </p>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="icon" variant="destructive" className="h-7 w-7" aria-label="Delete visualization">
+                        <Button size="icon" variant="destructive" className="h-7 w-7 self-end sm:self-auto shrink-0" aria-label="Delete visualization">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
@@ -115,7 +115,7 @@ function VisualizationPreview({
         <img src={vis.output.url} alt="Visualization" className="w-full aspect-video object-cover" />
         <button
           type="button"
-          className="absolute top-2 right-2 rounded-full bg-black/60 text-white p-1.5 opacity-0 group-hover:opacity-100 transition"
+          className="absolute top-2 right-2 rounded-full bg-black/60 text-white p-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition"
           onClick={onOpenLightbox}
           aria-label="Open full screen"
         >

@@ -54,20 +54,21 @@ export function RecommendationTier({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div>
               <span>{title}</span>
               <p className="text-sm font-normal text-text-tertiary">{subtitle}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex w-full sm:w-auto gap-2">
               {!tier || tier.status === "failed" ? (
-                <Button size="sm" onClick={onGenerate} disabled={isGenerating}>
+                <Button size="sm" className="flex-1 sm:flex-none" onClick={onGenerate} disabled={isGenerating}>
                   {isGenerating ? "Generating..." : tier?.status === "failed" ? "Retry" : "Generate"}
                 </Button>
               ) : tier.status === "completed" ? (
                 <Button
                   size="sm"
                   variant="outline"
+                  className="flex-1 sm:flex-none"
                   onClick={() => setShowRegenerateDialog(true)}
                   disabled={isGenerating}
                 >

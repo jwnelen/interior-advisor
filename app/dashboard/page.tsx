@@ -196,7 +196,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-surface-page">
       <Navbar />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-4 md:py-8">
         {!styleQuiz?.calculatedStyle && (
           <Card className="mb-6 border-primary/50 bg-primary/5">
             <CardContent className="pt-6">
@@ -219,8 +219,8 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         )}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">My Projects</h1>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold">My Projects</h1>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button disabled={!styleQuiz?.calculatedStyle}>New Project</Button>
