@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Navbar } from "@/components/navbar";
 import { authClient } from "@/lib/auth-client";
 
 export default function LandingPage() {
@@ -11,7 +10,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-surface-page to-surface-elevated">
-      <Navbar />
 
       {/* Hero Section */}
       <main className="container mx-auto px-4 py-8 md:py-16">

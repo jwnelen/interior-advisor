@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,11 +37,6 @@ export function VisualizationDialog({
   ikeaProduct,
 }: VisualizationDialogProps) {
   const [includeIkea, setIncludeIkea] = useState(true);
-
-  // Reset toggle whenever a new product is passed in
-  useEffect(() => {
-    setIncludeIkea(true);
-  }, [ikeaProduct?.imageUrl]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

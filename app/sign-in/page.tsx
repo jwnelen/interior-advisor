@@ -191,8 +191,8 @@ export default function SignInPage() {
             </Button>
 
             <div className="text-xs text-center text-text-tertiary space-y-1">
-              <p>We'll email you a 6-digit code for a password-free sign in.</p>
-              <p>No account yet? Don't worry, we'll create one for you.</p>
+              <p>We&apos;ll email you a 6-digit code for a password-free sign in.</p>
+              <p>No account yet? Don&apos;t worry, we&apos;ll create one for you.</p>
             </div>
           </form>
 

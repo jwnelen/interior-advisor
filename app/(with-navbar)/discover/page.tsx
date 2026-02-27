@@ -8,7 +8,6 @@ import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Navbar } from "@/components/navbar";
 import {
   EMOTIONAL_VIBE_QUESTION,
   VISUAL_ANCHOR_QUESTION,
@@ -114,7 +113,6 @@ export default function DiscoverPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-accent-brand-light to-surface-elevated">
-      <Navbar />
 
       {step !== "intro" && step !== "results" && (
         <div className="container mx-auto px-4 mb-8">

@@ -29,7 +29,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Navbar } from "@/components/navbar";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -194,7 +193,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-surface-page">
-      <Navbar />
 
       <main className="container mx-auto px-4 py-4 md:py-8">
         {!styleQuiz?.calculatedStyle && (

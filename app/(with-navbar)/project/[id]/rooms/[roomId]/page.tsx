@@ -12,7 +12,6 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Navbar } from "@/components/navbar";
 import { PhotoSection } from "./_components/photo-section";
 import { AnalysisCard } from "./_components/analysis-card";
 import { RecommendationTier } from "./_components/recommendation-tier";
@@ -102,6 +101,9 @@ export default function RoomPage() {
       // Show success message after all uploads complete
       if (successCount > 0) {
         toast.success(`Uploaded ${successCount} photo${successCount > 1 ? 's' : ''} successfully`);
+      }
+      if (failCount > 0) {
+        toast.error(`${failCount} photo${failCount > 1 ? "s" : ""} failed to upload`);
       }
     } finally {
       setUploading(false);
@@ -256,7 +258,6 @@ export default function RoomPage() {
 
   return (
     <div className="min-h-screen bg-surface-page">
-      <Navbar />
 
       <main className="container mx-auto px-3 sm:px-4 py-4 md:py-8">
         {/* Page header */}
@@ -372,6 +373,7 @@ export default function RoomPage() {
       </main>
 
       <VisualizationDialog
+        key={ikeaProductForDialog?.imageUrl ?? "no-ikea-product"}
         open={showVisDialog}
         onOpenChange={setShowVisDialog}
         photos={room.photos}

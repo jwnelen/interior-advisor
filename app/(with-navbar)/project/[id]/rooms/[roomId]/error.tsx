@@ -27,7 +27,7 @@ export default function RoomError({
         <CardHeader>
           <CardTitle className="text-2xl">Room error</CardTitle>
           <CardDescription>
-            We couldn't load this room. It may have been deleted or you may not have access to it.
+            We couldn&apos;t load this room. It may have been deleted or you may not have access to it.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
