@@ -192,6 +192,14 @@ export const remove = mutation({
       await ctx.db.delete(room._id);
     }
 
+    const usageEvents = await ctx.db
+      .query("apiUsageEvents")
+      .withIndex("by_project_createdAt", (q) => q.eq("projectId", args.id))
+      .collect();
+    for (const event of usageEvents) {
+      await ctx.db.delete(event._id);
+    }
+
     await ctx.db.delete(args.id);
   },
 });
@@ -241,6 +249,14 @@ export const internalRemove = internalMutation({
       }
 
       await ctx.db.delete(room._id);
+    }
+
+    const usageEvents = await ctx.db
+      .query("apiUsageEvents")
+      .withIndex("by_project_createdAt", (q) => q.eq("projectId", args.id))
+      .collect();
+    for (const event of usageEvents) {
+      await ctx.db.delete(event._id);
     }
 
     await ctx.db.delete(args.id);

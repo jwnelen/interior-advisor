@@ -206,6 +206,33 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_recommendation", ["recommendationId"]),
 
+  // API usage and estimated cost tracking
+  apiUsageEvents: defineTable({
+    userId: v.optional(v.string()),
+    projectId: v.optional(v.id("projects")),
+    roomId: v.optional(v.id("rooms")),
+    provider: v.union(v.literal("openai"), v.literal("replicate")),
+    model: v.string(),
+    operation: v.union(
+      v.literal("scene_analysis"),
+      v.literal("recommendations"),
+      v.literal("custom_question"),
+      v.literal("visualization")
+    ),
+    status: v.union(v.literal("success"), v.literal("failed")),
+    estimatedCostUsd: v.number(),
+    units: v.number(),
+    inputTokens: v.optional(v.number()),
+    outputTokens: v.optional(v.number()),
+    totalTokens: v.optional(v.number()),
+    errorMessage: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_user_createdAt", ["userId", "createdAt"])
+    .index("by_project_createdAt", ["projectId", "createdAt"])
+    .index("by_room_createdAt", ["roomId", "createdAt"])
+    .index("by_operation_createdAt", ["operation", "createdAt"]),
+
   // Style quiz responses for discovery
   styleQuizResponses: defineTable({
     userId: v.optional(v.string()),

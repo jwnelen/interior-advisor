@@ -6,6 +6,7 @@ import { internal } from "../_generated/api";
 import OpenAI from "openai";
 import { withRetry } from "../lib/retry";
 import { createLogger } from "../lib/logger";
+import { estimateOpenAICostUsd, normalizeOpenAITokenUsage } from "../lib/apiCost";
 
 const SCENE_ANALYSIS_SYSTEM_PROMPT = `You are an expert interior designer analyzing room photographs. You may receive multiple photos of the same room from different angles. Combine observations from all provided images into a single comprehensive analysis.
 
@@ -61,6 +62,11 @@ export const analyze = internalAction({
     photoStorageIds: v.array(v.id("_storage")),
   },
   handler: async (ctx, args) => {
+    const model = "gpt-4o";
+    let openAiCallCompleted = false;
+    let usage = normalizeOpenAITokenUsage(null);
+    let estimatedCostUsd = 0;
+
     const logger = createLogger("sceneAnalysis", {
       roomId: args.roomId,
       photoCount: args.photoStorageIds.length,
@@ -117,7 +123,7 @@ export const analyze = internalAction({
       // Wrap OpenAI call in retry logic to handle transient failures
       const response = await withRetry(
         () => openai.chat.completions.create({
-          model: "gpt-4o",
+          model,
           messages: [
             { role: "system", content: SCENE_ANALYSIS_SYSTEM_PROMPT },
             { role: "user", content: contentParts },
@@ -139,6 +145,10 @@ export const analyze = internalAction({
         tokensUsed: response.usage?.total_tokens,
       });
 
+      openAiCallCompleted = true;
+      usage = normalizeOpenAITokenUsage(response.usage);
+      estimatedCostUsd = estimateOpenAICostUsd(model, usage);
+
       const results = JSON.parse(content);
 
       await ctx.runMutation(internal.analyses.complete, {
@@ -153,9 +163,47 @@ export const analyze = internalAction({
         },
       });
 
+      try {
+        await ctx.runMutation(internal.apiUsage.track, {
+          provider: "openai",
+          model,
+          operation: "scene_analysis",
+          status: "success",
+          estimatedCostUsd,
+          units: 1,
+          inputTokens: usage.inputTokens,
+          outputTokens: usage.outputTokens,
+          totalTokens: usage.totalTokens,
+          roomId: args.roomId,
+        });
+      } catch (trackingError) {
+        logger.warn("Failed to track API usage", {
+          trackingError: trackingError instanceof Error ? trackingError.message : String(trackingError),
+        });
+      }
+
       logger.info("Scene analysis completed successfully");
     } catch (error) {
       logger.error("Scene analysis failed", error, { analysisId });
+      try {
+        await ctx.runMutation(internal.apiUsage.track, {
+          provider: "openai",
+          model,
+          operation: "scene_analysis",
+          status: "failed",
+          estimatedCostUsd: openAiCallCompleted ? estimatedCostUsd : 0,
+          units: 1,
+          inputTokens: openAiCallCompleted ? usage.inputTokens : undefined,
+          outputTokens: openAiCallCompleted ? usage.outputTokens : undefined,
+          totalTokens: openAiCallCompleted ? usage.totalTokens : undefined,
+          roomId: args.roomId,
+          errorMessage: error instanceof Error ? error.message : "Unknown error",
+        });
+      } catch (trackingError) {
+        logger.warn("Failed to track failed API usage", {
+          trackingError: trackingError instanceof Error ? trackingError.message : String(trackingError),
+        });
+      }
       await ctx.runMutation(internal.analyses.fail, {
         id: analysisId,
         error: error instanceof Error ? error.message : "Unknown error",
