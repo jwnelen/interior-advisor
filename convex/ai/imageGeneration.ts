@@ -139,6 +139,13 @@ type ResolvedVisualizationOutput =
   | { kind: "url"; url: string }
   | { kind: "blob"; blob: Blob };
 
+type ReplicateOutputObject = {
+  toString?: () => string;
+  url?: unknown;
+  blob?: () => Promise<unknown>;
+  constructor?: { name?: string };
+};
+
 async function resolveVisualizationOutput(output: unknown): Promise<ResolvedVisualizationOutput> {
   if (!output) {
     throw new Error("No output from Replicate");
@@ -181,7 +188,7 @@ async function resolveVisualizationOutput(output: unknown): Promise<ResolvedVisu
     }
 
     if (typeof value === "object") {
-      const obj = value as any;
+      const obj = value as ReplicateOutputObject;
 
       if (typeof obj.toString === "function") {
         try {
@@ -189,7 +196,9 @@ async function resolveVisualizationOutput(output: unknown): Promise<ResolvedVisu
           if (typeof str === "string" && str.startsWith("http")) {
             return { kind: "url", url: str };
           }
-        } catch (e) { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
 
       if (obj.url) {
@@ -204,7 +213,9 @@ async function resolveVisualizationOutput(output: unknown): Promise<ResolvedVisu
             const res = obj.url();
             if (typeof res === "string" && res.startsWith("http")) return { kind: "url", url: res };
             if (res instanceof URL) return { kind: "url", url: res.toString() };
-          } catch (e) { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
         }
       }
 
@@ -212,7 +223,9 @@ async function resolveVisualizationOutput(output: unknown): Promise<ResolvedVisu
         try {
           const b = await obj.blob();
           if (b instanceof Blob) return { kind: "blob", blob: b };
-        } catch (e) { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
     }
 
@@ -231,7 +244,9 @@ async function resolveVisualizationOutput(output: unknown): Promise<ResolvedVisu
 
   const diagnostic = {
     type: typeof output,
-    constructor: (output as any)?.constructor?.name,
+    constructor: typeof output === "object" && output !== null
+      ? (output as ReplicateOutputObject).constructor?.name
+      : undefined,
     isArray: Array.isArray(output),
     keys: typeof output === "object" && output !== null ? Object.keys(output) : [],
     json: JSON.stringify(output),

@@ -22,7 +22,7 @@ export default function ProjectError({
         <CardHeader>
           <CardTitle className="text-2xl">Project error</CardTitle>
           <CardDescription>
-            We couldn't load this project. It may have been deleted or you may not have access to it.
+            We couldn&apos;t load this project. It may have been deleted or you may not have access to it.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

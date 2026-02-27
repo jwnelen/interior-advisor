@@ -6,7 +6,6 @@ import { api } from "@/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Navbar } from "@/components/navbar";
 import {
   STYLE_DESCRIPTIONS,
   STYLE_COLOR_PALETTES,
@@ -24,8 +23,6 @@ export default function StylePage() {
 
   return (
     <div className="min-h-screen bg-surface-page">
-      <Navbar />
-
       <main className="container mx-auto px-4 py-8">
         {quizData === undefined ? (
           <div className="text-center py-12">

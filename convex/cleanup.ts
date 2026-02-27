@@ -15,7 +15,7 @@ export const cleanupOldData = internalMutation({
     const NINETY_DAYS = 90 * 24 * 60 * 60 * 1000;
     const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
 
-    let stats = {
+    const stats = {
       projectsDeleted: 0,
       analysesDeleted: 0,
       recommendationsDeleted: 0,

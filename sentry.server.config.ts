@@ -19,7 +19,7 @@ Sentry.init({
   ],
 
   // Add server context
-  beforeSend(event, hint) {
+  beforeSend(event) {
     // Don't send events in development
     if (process.env.NODE_ENV === "development") {
       return null;

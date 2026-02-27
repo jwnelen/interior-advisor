@@ -39,7 +39,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ROOM_TYPES } from "@/lib/constants";
-import { Navbar } from "@/components/navbar";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 
@@ -105,7 +104,6 @@ export default function ProjectPage() {
 
   return (
     <div className="min-h-screen bg-surface-page">
-      <Navbar />
 
       <main className="container mx-auto px-4 py-4 md:py-8">
         {/* Page header */}
@@ -335,7 +333,7 @@ export default function ProjectPage() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete room?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This will permanently delete "{room.name}" and all its photos, analyses, recommendations, and visualizations. This action cannot be undone.
+                            This will permanently delete {room.name} and all its photos, analyses, recommendations, and visualizations. This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
