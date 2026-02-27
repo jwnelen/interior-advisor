@@ -53,7 +53,7 @@ export function VisualizationDialog({
           {photos.length > 0 && (
             <div>
               <Label>Select base photo</Label>
-              <div className="grid grid-cols-3 gap-2 mt-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
                 {photos.map((photo) => (
                   <button
                     key={photo.storageId}

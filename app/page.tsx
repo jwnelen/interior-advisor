@@ -14,33 +14,33 @@ export default function LandingPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <main className="container mx-auto px-4 py-16">
+      <main className="container mx-auto px-4 py-8 md:py-16">
         <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-5xl font-bold text-text-primary mb-6">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-text-primary mb-4 md:mb-6">
             Transform Your Space with AI-Powered Design
           </h2>
-          <p className="text-xl text-text-secondary mb-8">
+          <p className="text-base sm:text-lg md:text-xl text-text-secondary mb-6 md:mb-8">
             Upload photos of your room, discover your style, and get personalized
             recommendations with realistic visualizations. Professional interior
             design guidance, without the designer fees.
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             {session ? (
               <>
-                <Link href="/discover">
-                  <Button size="lg" className="text-lg px-8">
+                <Link href="/discover" className="w-full sm:w-auto">
+                  <Button size="lg" className="text-lg px-8 w-full sm:w-auto">
                     Discover Your Style
                   </Button>
                 </Link>
-                <Link href="/dashboard">
-                  <Button size="lg" variant="outline" className="text-lg px-8">
+                <Link href="/dashboard" className="w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="text-lg px-8 w-full sm:w-auto">
                     My Projects
                   </Button>
                 </Link>
               </>
             ) : (
-              <Link href="/sign-in">
-                <Button size="lg" className="text-lg px-8">
+              <Link href="/sign-in" className="w-full sm:w-auto">
+                <Button size="lg" className="text-lg px-8 w-full sm:w-auto">
                   Get Started
                 </Button>
               </Link>
@@ -49,7 +49,7 @@ export default function LandingPage() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-8 mt-24">
+        <div className="grid md:grid-cols-3 gap-6 mt-12 md:mt-24">
           <Card className="border-0 shadow-lg">
             <CardContent className="pt-6">
               <div className="w-12 h-12 bg-feature-blue rounded-lg flex items-center justify-center mb-4">
@@ -133,9 +133,9 @@ export default function LandingPage() {
         </div>
 
         {/* How it Works */}
-        <div className="mt-24">
-          <h3 className="text-3xl font-bold text-center mb-12">How It Works</h3>
-          <div className="grid md:grid-cols-4 gap-8">
+        <div className="mt-12 md:mt-24">
+          <h3 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12">How It Works</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               {
                 step: "1",
@@ -170,14 +170,14 @@ export default function LandingPage() {
         </div>
 
         {/* CTA Section */}
-        <div className="mt-24 text-center bg-cta-bg text-cta-text rounded-2xl p-12">
-          <h3 className="text-3xl font-bold mb-4">Ready to Transform Your Space?</h3>
-          <p className="text-cta-muted mb-8 max-w-xl mx-auto">
+        <div className="mt-12 md:mt-24 text-center bg-cta-bg text-cta-text rounded-2xl p-6 md:p-12">
+          <h3 className="text-2xl md:text-3xl font-bold mb-4">Ready to Transform Your Space?</h3>
+          <p className="text-cta-muted mb-6 md:mb-8 max-w-xl mx-auto">
             Sign in with your email to start your style discovery quiz and
             create your first design project.
           </p>
-          <Link href={session ? "/discover" : "/sign-in"}>
-            <Button size="lg" variant="secondary" className="text-lg px-8">
+          <Link href={session ? "/discover" : "/sign-in"} className="w-full sm:w-auto inline-block">
+            <Button size="lg" variant="secondary" className="text-lg px-8 w-full sm:w-auto">
               {session ? "Start Discovering" : "Get Started"}
             </Button>
           </Link>

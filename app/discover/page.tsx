@@ -80,7 +80,7 @@ export default function DiscoverPage() {
   ) => (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-3">{questionData.question}</h2>
+        <h2 className="text-2xl md:text-3xl font-bold mb-3">{questionData.question}</h2>
         <p className="text-text-tertiary text-sm">
           Question {currentStepIndex + 1} of {totalSteps}
         </p>
@@ -122,7 +122,7 @@ export default function DiscoverPage() {
         </div>
       )}
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-4 md:py-8">
         {step === "intro" && (
           <div className="max-w-2xl mx-auto text-center">
             <div className="mb-8">
@@ -179,17 +179,17 @@ export default function DiscoverPage() {
                 </svg>
               </div>
               <h1 className="text-3xl font-bold mb-3">Your Style Profile</h1>
-              <h2 className="text-4xl md:text-5xl font-bold text-accent-brand mb-4 capitalize">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-accent-brand mb-4 capitalize">
                 {calculatedStyle.primaryStyle}
                 {calculatedStyle.secondaryStyle && ` × ${calculatedStyle.secondaryStyle}`}
               </h2>
-              <p className="text-xl text-text-secondary leading-relaxed max-w-2xl mx-auto">
+              <p className="text-base md:text-xl text-text-secondary leading-relaxed max-w-2xl mx-auto">
                 {calculatedStyle.description}
               </p>
             </div>
 
             <Card className="mb-8">
-              <CardContent className="p-6 md:p-8">
+              <CardContent className="p-4 md:p-8">
                 <h3 className="font-bold text-lg mb-6">Your Style DNA</h3>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>

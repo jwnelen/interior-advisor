@@ -49,9 +49,9 @@ export function RecommendationItem({
         item.selected ? "border-status-success bg-status-success/20" : ""
       }`}
     >
-      <div className="flex items-start justify-between mb-2">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
         <h4 className="font-semibold">{item.title}</h4>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1 shrink-0">
           <Badge className={IMPACT_COLORS[item.impact]}>{item.impact}</Badge>
           <Badge variant="outline">{DIFFICULTY_LABELS[item.difficulty]}</Badge>
         </div>
@@ -70,7 +70,7 @@ export function RecommendationItem({
         </div>
       </div>
       {item.ikeaProduct && (
-        <div className="mt-3 flex items-center gap-3 p-2 rounded-md border bg-muted/40">
+        <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-3 p-2 rounded-md border bg-muted/40">
           <img
             src={item.ikeaProduct.imageUrl}
             alt={item.ikeaProduct.name}
@@ -90,18 +90,19 @@ export function RecommendationItem({
           </a>
         </div>
       )}
-      <div className="flex items-center justify-between mt-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
         <span className="text-sm font-medium">
           ${item.estimatedCost.min} - ${item.estimatedCost.max}
         </span>
-        <div className="flex gap-2">
+        <div className="flex w-full sm:w-auto gap-2">
           {item.visualizationPrompt && (
-            <Button size="sm" variant="outline" onClick={() => onVisualize(item)}>
+            <Button size="sm" className="flex-1 sm:flex-none" variant="outline" onClick={() => onVisualize(item)}>
               Visualize
             </Button>
           )}
           <Button
             size="sm"
+            className="flex-1 sm:flex-none"
             variant={item.selected ? "default" : "outline"}
             onClick={() =>
               onToggle({

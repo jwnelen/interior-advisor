@@ -50,7 +50,7 @@ export function Lightbox({ visualizations, index, photos, onIndexChange }: Light
           <button
             type="button"
             onClick={() => onIndexChange(null)}
-            className="absolute top-3 right-3 z-10 rounded-full bg-black/70 text-white p-2"
+            className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 rounded-full bg-black/70 text-white p-1.5 sm:p-2"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -60,7 +60,7 @@ export function Lightbox({ visualizations, index, photos, onIndexChange }: Light
               <button
                 type="button"
                 onClick={() => onIndexChange((index - 1 + count) % count)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/70 text-white p-2"
+                className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/70 text-white p-1.5 sm:p-2"
                 aria-label="Previous image"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -68,13 +68,13 @@ export function Lightbox({ visualizations, index, photos, onIndexChange }: Light
               <button
                 type="button"
                 onClick={() => onIndexChange((index + 1) % count)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/70 text-white p-2"
+                className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/70 text-white p-1.5 sm:p-2"
                 aria-label="Next image"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
-              <div className="h-full w-full flex flex-col px-16 py-6 gap-3">
-                <div className="grid grid-cols-2 gap-6 flex-1 overflow-hidden">
+              <div className="h-full w-full flex flex-col px-6 sm:px-12 lg:px-16 py-4 sm:py-6 gap-3 overflow-y-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 flex-1 overflow-hidden">
                   <div className="flex flex-col gap-1 h-full overflow-hidden">
                     <p className="text-xs text-slate-400 uppercase tracking-wide text-center flex-shrink-0">Original</p>
                     <div className="flex-1 flex items-center justify-center overflow-hidden">
@@ -110,7 +110,7 @@ export function Lightbox({ visualizations, index, photos, onIndexChange }: Light
                     )}
                   </div>
                 </div>
-                <p className="text-sm text-slate-200 text-center whitespace-pre-wrap break-words px-4 flex-shrink-0">
+                <p className="text-xs sm:text-sm text-slate-200 text-center whitespace-pre-wrap break-words px-2 sm:px-4 flex-shrink-0">
                   {currentVis.input.prompt}
                 </p>
               </div>

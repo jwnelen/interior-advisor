@@ -107,7 +107,7 @@ export default function ProjectPage() {
     <div className="min-h-screen bg-surface-page">
       <Navbar />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-4 md:py-8">
         {/* Page header */}
         <div className="flex items-center gap-4 mb-6">
           <Link href="/dashboard" className="text-text-tertiary hover:text-text-primary">
@@ -142,7 +142,7 @@ export default function ProjectPage() {
         </div>
 
         {/* Project Info */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-4 mb-6 md:mb-8">
           {project.styleProfile && (
             <Card>
               <CardHeader className="pb-2">
@@ -258,7 +258,7 @@ export default function ProjectPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {(rooms as Room[]).map((room) => (
               <Card key={room._id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>

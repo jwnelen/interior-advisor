@@ -258,21 +258,21 @@ export default function RoomPage() {
     <div className="min-h-screen bg-surface-page">
       <Navbar />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-3 sm:px-4 py-4 md:py-8">
         {/* Page header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Link href={`/project/${projectId}`} className="text-text-tertiary hover:text-text-primary">
+        <div className="flex items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <Link href={`/project/${projectId}`} className="text-text-tertiary hover:text-text-primary mt-0.5 sm:mt-0">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
           <div>
             <p className="text-sm text-text-tertiary">{project.name}</p>
-            <h1 className="text-2xl font-bold">{room.name}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold">{room.name}</h1>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
           <div className="lg:col-span-1">
             <PhotoSection
               photos={room.photos}
@@ -297,12 +297,12 @@ export default function RoomPage() {
 
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full">
-                <TabsTrigger value="recommendations" className="flex-1">Recommendations</TabsTrigger>
-                <TabsTrigger value="visualizations" className="flex-1">Visualizations</TabsTrigger>
+              <TabsList className="w-full h-auto">
+                <TabsTrigger value="recommendations" className="flex-1 text-xs sm:text-sm">Recommendations</TabsTrigger>
+                <TabsTrigger value="visualizations" className="flex-1 text-xs sm:text-sm">Visualizations</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="recommendations" className="mt-6">
+              <TabsContent value="recommendations" className="mt-4 sm:mt-6">
                 {!analysis || analysis.status !== "completed" ? (
                   <Card>
                     <CardContent className="py-12 text-center">
@@ -356,7 +356,7 @@ export default function RoomPage() {
                 )}
               </TabsContent>
 
-              <TabsContent value="visualizations" className="mt-6">
+              <TabsContent value="visualizations" className="mt-4 sm:mt-6">
                 <VisualizationsTab
                   visualizations={visualizations}
                   completedVisualizations={completedVisualizations}
