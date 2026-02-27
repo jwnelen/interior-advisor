@@ -6,73 +6,129 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Mail, ArrowLeft } from "lucide-react";
+import { Sparkles, Mail, ArrowLeft, KeyRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState<"email" | "code">("email");
   const [isLoading, setIsLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleMagicLink = async (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
     try {
-      await authClient.signIn.magicLink({
+      await authClient.emailOtp.sendVerificationOtp({
         email,
-        callbackURL: `${window.location.origin}/dashboard`,
+        type: "sign-in",
       });
-      setEmailSent(true);
+      setStep("code");
     } catch (err) {
-      setError("Failed to send magic link. Please try again.");
+      setError("Failed to send code. Please try again.");
       console.error(err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (emailSent) {
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      await authClient.signIn.emailOtp({
+        email,
+        otp,
+      });
+      router.push("/dashboard");
+    } catch (err) {
+      setError("Invalid or expired code. Please try again.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (step === "code") {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-surface to-surface-inset">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
               <div className="rounded-full bg-primary/10 p-3">
-                <Mail className="h-8 w-8 text-primary" />
+                <KeyRound className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-2xl">Check your email</CardTitle>
+            <CardTitle className="text-2xl">Enter your code</CardTitle>
             <CardDescription className="text-base">
-              We've sent a magic link to <span className="font-semibold text-text-primary">{email}</span>
+              We sent a 6-digit code to <span className="font-semibold text-text-primary">{email}</span>
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-sm text-text-secondary text-center space-y-2">
-              <p>Click the link in the email to sign in to your account.</p>
-              <p className="text-xs text-text-tertiary">
-                The link will expire in 15 minutes.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => {
-                setEmailSent(false);
-                setEmail("");
-              }}
-            >
-              Send another link
-            </Button>
-            <div className="text-center">
-              <Link href="/" className="text-sm text-text-tertiary hover:text-text-primary inline-flex items-center gap-1">
+          <CardContent>
+            <form onSubmit={handleVerifyCode} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="otp">Verification code</Label>
+                <Input
+                  id="otp"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="000000"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  required
+                  disabled={isLoading}
+                  className="w-full text-center text-2xl tracking-widest font-mono"
+                  maxLength={6}
+                  autoFocus
+                />
+              </div>
+
+              {error && (
+                <div className="text-sm text-red-500 bg-red-50 dark:bg-red-950/20 p-3 rounded-md">
+                  {error}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading || otp.length !== 6}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="animate-spin mr-2">⏳</span>
+                    Verifying...
+                  </>
+                ) : (
+                  "Sign in"
+                )}
+              </Button>
+
+              <div className="text-xs text-center text-text-tertiary">
+                This code expires in 10 minutes.
+              </div>
+            </form>
+
+            <div className="mt-6 text-center space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("email");
+                  setOtp("");
+                  setError("");
+                }}
+                className="text-sm text-text-tertiary hover:text-text-primary inline-flex items-center gap-1"
+              >
                 <ArrowLeft className="h-3 w-3" />
-                Back to home
-              </Link>
+                Use a different email or resend code
+              </button>
             </div>
           </CardContent>
         </Card>
@@ -95,7 +151,7 @@ export default function SignInPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleMagicLink} className="space-y-4">
+          <form onSubmit={handleSendCode} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email address</Label>
               <Input
@@ -124,18 +180,18 @@ export default function SignInPage() {
               {isLoading ? (
                 <>
                   <span className="animate-spin mr-2">⏳</span>
-                  Sending magic link...
+                  Sending code...
                 </>
               ) : (
                 <>
                   <Mail className="mr-2 h-4 w-4" />
-                  Send magic link
+                  Send code
                 </>
               )}
             </Button>
 
             <div className="text-xs text-center text-text-tertiary space-y-1">
-              <p>We'll email you a magic link for a password-free sign in.</p>
+              <p>We'll email you a 6-digit code for a password-free sign in.</p>
               <p>No account yet? Don't worry, we'll create one for you.</p>
             </div>
           </form>

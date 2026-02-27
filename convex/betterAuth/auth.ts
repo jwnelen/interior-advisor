@@ -3,7 +3,7 @@ import { convex } from "@convex-dev/better-auth/plugins";
 import type { GenericCtx } from "@convex-dev/better-auth/utils";
 import type { BetterAuthOptions } from "better-auth";
 import { betterAuth } from "better-auth";
-import { magicLink } from "better-auth/plugins";
+import { emailOTP } from "better-auth/plugins";
 import { Resend } from "resend";
 import { components } from "../_generated/api";
 import type { DataModel } from "../_generated/dataModel";
@@ -28,29 +28,26 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     trustedOrigins: [process.env.SITE_URL ?? "http://localhost:3000"],
     database: authComponent.adapter(ctx),
     emailAndPassword: {
-      enabled: false, // Disable email/password, use magic link instead
+      enabled: false,
     },
     plugins: [
       convex({ authConfig }),
-      magicLink({
-        sendMagicLink: async ({ email, url }) => {
+      emailOTP({
+        sendVerificationOTP: async ({ email, otp }) => {
           const resend = new Resend(process.env.RESEND_API_KEY);
           await resend.emails.send({
-            // Update this to your verified Resend domain for production
             from: "Interior Advisor <noreply@jeroennelen.nl>",
             to: email,
-            subject: "Your sign-in link for Interior Advisor",
+            subject: "Your sign-in code for Interior Advisor",
             html: `
               <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
-                <h2 style="margin-bottom: 8px;">Sign in to Interior Advisor</h2>
-                <p style="color: #555; margin-bottom: 24px;">
-                  Click the button below to sign in. This link expires in 15 minutes.
-                </p>
-                <a href="${url}" style="display: inline-block; background: #18181b; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">
-                  Sign in
-                </a>
+                <h2>Sign in to Interior Advisor</h2>
+                <p style="color: #555; margin-bottom: 24px;">Your sign-in code is:</p>
+                <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; text-align: center; padding: 24px; background: #f4f4f5; border-radius: 8px;">
+                  ${otp}
+                </div>
                 <p style="color: #888; font-size: 13px; margin-top: 24px;">
-                  If you didn't request this, you can safely ignore this email.
+                  This code expires in 10 minutes. If you didn't request this, ignore this email.
                 </p>
               </div>
             `,
