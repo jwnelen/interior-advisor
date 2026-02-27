@@ -6,6 +6,7 @@ import { internal } from "../_generated/api";
 import Replicate from "replicate";
 import { withRetry } from "../lib/retry";
 import { createLogger } from "../lib/logger";
+import { estimateReplicateCostUsd } from "../lib/apiCost";
 
 function buildInteriorPrompt(userPrompt: string): string {
   return [
@@ -29,6 +30,10 @@ export const generateVisualization = internalAction({
     ikeaProductImageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const model = "google/nano-banana";
+    let replicateCalled = false;
+    let estimatedCostUsd = 0;
+
     const logger = createLogger("imageGeneration", {
       visualizationId: args.visualizationId,
       roomId: args.roomId,
@@ -67,11 +72,11 @@ export const generateVisualization = internalAction({
 
       const replicate = new Replicate({ auth: replicateToken });
 
-      logger.info("Calling Replicate API", { model: "google/nano-banana" });
+      logger.info("Calling Replicate API", { model });
       // Wrap Replicate API call in retry logic to handle transient failures
       const rawOutput = await withRetry(
         () => replicate.run(
-          "google/nano-banana",
+          model,
           {
             input: {
               prompt: buildInteriorPrompt(args.prompt),
@@ -81,6 +86,8 @@ export const generateVisualization = internalAction({
         ),
         { maxRetries: 3, baseDelay: 2000, maxDelay: 16000 }
       );
+      replicateCalled = true;
+      estimatedCostUsd = estimateReplicateCostUsd(model, 1);
 
       logger.info("Received Replicate response");
 
@@ -118,10 +125,43 @@ export const generateVisualization = internalAction({
         url,
       });
 
+      try {
+        await ctx.runMutation(internal.apiUsage.track, {
+          provider: "replicate",
+          model,
+          operation: "visualization",
+          status: "success",
+          estimatedCostUsd,
+          units: 1,
+          roomId: args.roomId,
+        });
+      } catch (trackingError) {
+        logger.warn("Failed to track API usage", {
+          trackingError: trackingError instanceof Error ? trackingError.message : String(trackingError),
+        });
+      }
+
       logger.info("Visualization generation completed successfully");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error("Image generation failed", error);
+
+      try {
+        await ctx.runMutation(internal.apiUsage.track, {
+          provider: "replicate",
+          model,
+          operation: "visualization",
+          status: "failed",
+          estimatedCostUsd: replicateCalled ? estimatedCostUsd : 0,
+          units: 1,
+          roomId: args.roomId,
+          errorMessage,
+        });
+      } catch (trackingError) {
+        logger.warn("Failed to track failed API usage", {
+          trackingError: trackingError instanceof Error ? trackingError.message : String(trackingError),
+        });
+      }
 
       try {
         await ctx.runMutation(internal.visualizations.fail, {

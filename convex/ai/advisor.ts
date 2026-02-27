@@ -6,6 +6,7 @@ import { internal } from "../_generated/api";
 import OpenAI from "openai";
 import { withRetry } from "../lib/retry";
 import { createLogger } from "../lib/logger";
+import { estimateOpenAICostUsd, normalizeOpenAITokenUsage } from "../lib/apiCost";
 
 const ADVISOR_SYSTEM_PROMPT = `You are an expert interior designer providing actionable recommendations to improve a room.
 You have been given a detailed analysis of a room photo and the user's style profile from a discovery quiz.
@@ -187,6 +188,11 @@ export const generateRecommendations = internalAction({
     recommendationId: v.id("recommendations"),
   },
   handler: async (ctx, args) => {
+    const model = "gpt-4o";
+    let openAiCallCompleted = false;
+    let usage = normalizeOpenAITokenUsage(null);
+    let estimatedCostUsd = 0;
+
     const logger = createLogger("advisor", {
       roomId: args.roomId,
       tier: args.tier,
@@ -218,7 +224,7 @@ export const generateRecommendations = internalAction({
       // Wrap OpenAI call in retry logic to handle transient failures
       const response = await withRetry(
         () => openai.chat.completions.create({
-          model: "gpt-4o",
+          model,
           messages: [
             { role: "system", content: ADVISOR_SYSTEM_PROMPT },
             { role: "user", content: context + "\n\n" + tierPrompt },
@@ -239,6 +245,10 @@ export const generateRecommendations = internalAction({
         contentLength: content.length,
         tokensUsed: response.usage?.total_tokens,
       });
+
+      openAiCallCompleted = true;
+      usage = normalizeOpenAITokenUsage(response.usage);
+      estimatedCostUsd = estimateOpenAICostUsd(model, usage);
 
       const recommendations = JSON.parse(content);
       logger.info("Parsed recommendations", {
@@ -270,11 +280,49 @@ export const generateRecommendations = internalAction({
 
       logger.info("Recommendations saved successfully");
 
+      try {
+        await ctx.runMutation(internal.apiUsage.track, {
+          provider: "openai",
+          model,
+          operation: "recommendations",
+          status: "success",
+          estimatedCostUsd,
+          units: 1,
+          inputTokens: usage.inputTokens,
+          outputTokens: usage.outputTokens,
+          totalTokens: usage.totalTokens,
+          roomId: args.roomId,
+        });
+      } catch (trackingError) {
+        logger.warn("Failed to track API usage", {
+          trackingError: trackingError instanceof Error ? trackingError.message : String(trackingError),
+        });
+      }
+
       await ctx.scheduler.runAfter(0, internal.ai.ikeaSearch.searchIkeaForRecommendations, {
         recommendationId: args.recommendationId,
       });
     } catch (error) {
       logger.error("Recommendation generation failed", error);
+      try {
+        await ctx.runMutation(internal.apiUsage.track, {
+          provider: "openai",
+          model,
+          operation: "recommendations",
+          status: "failed",
+          estimatedCostUsd: openAiCallCompleted ? estimatedCostUsd : 0,
+          units: 1,
+          inputTokens: openAiCallCompleted ? usage.inputTokens : undefined,
+          outputTokens: openAiCallCompleted ? usage.outputTokens : undefined,
+          totalTokens: openAiCallCompleted ? usage.totalTokens : undefined,
+          roomId: args.roomId,
+          errorMessage: error instanceof Error ? error.message : "Unknown error",
+        });
+      } catch (trackingError) {
+        logger.warn("Failed to track failed API usage", {
+          trackingError: trackingError instanceof Error ? trackingError.message : String(trackingError),
+        });
+      }
       await ctx.runMutation(internal.recommendations.fail, {
         id: args.recommendationId,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -405,6 +453,16 @@ export const answerCustomQuestion = internalAction({
     userQuestion: v.string(),
   },
   handler: async (ctx, args) => {
+    const model = "gpt-4o";
+    let openAiCallCompleted = false;
+    let usage = normalizeOpenAITokenUsage(null);
+    let estimatedCostUsd = 0;
+
+    const logger = createLogger("advisorCustomQuestion", {
+      roomId: args.roomId,
+      recommendationId: args.recommendationId,
+    });
+
     try {
       const analysis = await ctx.runQuery(internal.analyses.get, { id: args.analysisId });
       if (!analysis || !analysis.results) {
@@ -431,7 +489,7 @@ ${CUSTOM_QUESTION_PROMPT}
 ${context}`;
 
       const response = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model,
         messages: [
           { role: "system", content: ADVISOR_SYSTEM_PROMPT },
           { role: "user", content: userPrompt },
@@ -444,6 +502,10 @@ ${context}`;
       if (!content) {
         throw new Error("No response from OpenAI");
       }
+
+      openAiCallCompleted = true;
+      usage = normalizeOpenAITokenUsage(response.usage);
+      estimatedCostUsd = estimateOpenAICostUsd(model, usage);
 
       const recommendations = JSON.parse(content);
 
@@ -470,11 +532,49 @@ ${context}`;
         summary: recommendations.summary,
       });
 
+      try {
+        await ctx.runMutation(internal.apiUsage.track, {
+          provider: "openai",
+          model,
+          operation: "custom_question",
+          status: "success",
+          estimatedCostUsd,
+          units: 1,
+          inputTokens: usage.inputTokens,
+          outputTokens: usage.outputTokens,
+          totalTokens: usage.totalTokens,
+          roomId: args.roomId,
+        });
+      } catch (trackingError) {
+        logger.warn("Failed to track API usage", {
+          trackingError: trackingError instanceof Error ? trackingError.message : String(trackingError),
+        });
+      }
+
       await ctx.scheduler.runAfter(0, internal.ai.ikeaSearch.searchIkeaForRecommendations, {
         recommendationId: args.recommendationId,
       });
     } catch (error) {
-      console.error("Custom question answering failed:", error);
+      logger.error("Custom question answering failed", error);
+      try {
+        await ctx.runMutation(internal.apiUsage.track, {
+          provider: "openai",
+          model,
+          operation: "custom_question",
+          status: "failed",
+          estimatedCostUsd: openAiCallCompleted ? estimatedCostUsd : 0,
+          units: 1,
+          inputTokens: openAiCallCompleted ? usage.inputTokens : undefined,
+          outputTokens: openAiCallCompleted ? usage.outputTokens : undefined,
+          totalTokens: openAiCallCompleted ? usage.totalTokens : undefined,
+          roomId: args.roomId,
+          errorMessage: error instanceof Error ? error.message : "Unknown error",
+        });
+      } catch (trackingError) {
+        logger.warn("Failed to track failed API usage", {
+          trackingError: trackingError instanceof Error ? trackingError.message : String(trackingError),
+        });
+      }
       await ctx.runMutation(internal.recommendations.fail, {
         id: args.recommendationId,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -482,4 +582,3 @@ ${context}`;
     }
   },
 });
-

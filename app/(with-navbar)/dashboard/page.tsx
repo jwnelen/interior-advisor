@@ -108,12 +108,32 @@ function derivePriorities(calculatedStyle: {
   return priorities.slice(0, 4); // Return top 4 priorities
 }
 
+function formatUsd(amount: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+function formatCompactNumber(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const projects = useQuery(
     api.projects.list,
     session ? {} : "skip"
+  );
+  const usageSummary = useQuery(
+    api.apiUsage.getMySummary,
+    session ? { days: 30, limit: 5 } : "skip"
   );
   const styleQuiz = useQuery(api.styleQuiz.get);
   const createProject = useMutation(api.projects.create);
@@ -269,6 +289,52 @@ export default function DashboardPage() {
             </DialogContent>
           </Dialog>
         </div>
+
+        <Card className="mb-8">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">API Cost Monitor</CardTitle>
+            <CardDescription>Estimated AI API usage for the last 30 days</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {usageSummary === undefined ? (
+              <p className="text-sm text-text-tertiary">Loading usage metrics...</p>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-text-tertiary">Estimated Cost</p>
+                    <p className="text-2xl font-semibold">{formatUsd(usageSummary.totalEstimatedCostUsd)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-text-tertiary">API Requests</p>
+                    <p className="text-2xl font-semibold">{usageSummary.totalRequests.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-text-tertiary">Tokens</p>
+                    <p className="text-2xl font-semibold">{formatCompactNumber(usageSummary.totalTokens)}</p>
+                  </div>
+                </div>
+
+                {usageSummary.byOperation.length > 0 ? (
+                  <div className="space-y-2">
+                    {usageSummary.byOperation.slice(0, 3).map((item) => (
+                      <div key={item.name} className="flex items-center justify-between text-sm">
+                        <span className="text-text-secondary capitalize">
+                          {item.name.replace(/_/g, " ")}
+                        </span>
+                        <span className="text-text-secondary">
+                          {item.requests} req • {formatUsd(item.estimatedCostUsd)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-text-tertiary">No AI API usage recorded yet.</p>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
 
         {projects === undefined ? (
           <div className="text-center py-12">
