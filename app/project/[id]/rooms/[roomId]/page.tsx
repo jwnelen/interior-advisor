@@ -12,7 +12,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Navbar } from "@/components/navbar";
 import { PhotoSection } from "./_components/photo-section";
 import { AnalysisCard } from "./_components/analysis-card";
 import { RecommendationTier } from "./_components/recommendation-tier";
@@ -242,26 +242,22 @@ export default function RoomPage() {
 
   return (
     <div className="min-h-screen bg-surface-page">
-      <header className="bg-surface-elevated border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href={`/project/${projectId}`} className="text-text-tertiary hover:text-text-primary">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </Link>
-              <div>
-                <p className="text-sm text-text-tertiary">{project.name}</p>
-                <h1 className="text-2xl font-bold">{room.name}</h1>
-              </div>
-            </div>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="container mx-auto px-4 py-8">
+        {/* Page header */}
+        <div className="flex items-center gap-4 mb-6">
+          <Link href={`/project/${projectId}`} className="text-text-tertiary hover:text-text-primary">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </Link>
+          <div>
+            <p className="text-sm text-text-tertiary">{project.name}</p>
+            <h1 className="text-2xl font-bold">{room.name}</h1>
+          </div>
+        </div>
+
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
             <PhotoSection

@@ -29,9 +29,85 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Navbar } from "@/components/navbar";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+
+// Helper functions for building style profile
+const STYLE_COLOR_PALETTES: Record<string, string[]> = {
+  modern: ["charcoal gray", "soft white", "walnut wood"],
+  scandinavian: ["warm oak", "soft white", "sage green"],
+  industrial: ["graphite", "brushed metal", "weathered wood"],
+  traditional: ["rich mahogany", "cream", "navy blue"],
+  bohemian: ["terracotta", "mustard yellow", "emerald green"],
+  minimalist: ["crisp white", "light gray", "natural wood"],
+  coastal: ["seafoam", "light sand", "ocean blue"],
+  "mid-century": ["teak", "olive green", "burnt orange"],
+  eclectic: ["jewel tones", "mixed metals", "vibrant accents"],
+  maximalist: ["rich burgundy", "emerald", "gold accents"],
+  farmhouse: ["weathered white", "barn wood", "sage"],
+};
+
+function deriveColorPreferences(
+  primaryStyle: string,
+  secondaryStyle: string | undefined
+): string[] {
+  const palettes = new Set<string>();
+
+  const addPalette = (style: string | undefined) => {
+    if (style && STYLE_COLOR_PALETTES[style]) {
+      STYLE_COLOR_PALETTES[style].forEach((color) => palettes.add(color));
+    }
+  };
+
+  addPalette(primaryStyle);
+  addPalette(secondaryStyle);
+
+  if (palettes.size === 0) {
+    STYLE_COLOR_PALETTES.modern.forEach((color) => palettes.add(color));
+  }
+
+  return Array.from(palettes);
+}
+
+function derivePriorities(calculatedStyle: {
+  emotionalVibe: string;
+  decorDensity: string;
+  colorPattern: string;
+}): string[] {
+  const priorities: string[] = [];
+
+  // Emotional Vibe priorities
+  if (calculatedStyle.emotionalVibe === "serenity") {
+    priorities.push("Calming atmosphere", "Soft lighting");
+  } else if (calculatedStyle.emotionalVibe === "energy") {
+    priorities.push("Bold statement pieces", "Creative expression");
+  } else if (calculatedStyle.emotionalVibe === "cozy") {
+    priorities.push("Warmth and comfort", "Inviting textures");
+  } else if (calculatedStyle.emotionalVibe === "order") {
+    priorities.push("Organization and clarity", "Clean lines");
+  }
+
+  // Decor Density priorities
+  if (calculatedStyle.decorDensity === "purist") {
+    priorities.push("Minimal clutter", "Clear surfaces");
+  } else if (calculatedStyle.decorDensity === "curator") {
+    priorities.push("Thoughtful styling", "Balanced composition");
+  } else if (calculatedStyle.decorDensity === "collector") {
+    priorities.push("Personal collections", "Rich layering");
+  }
+
+  // Color & Pattern priorities
+  if (calculatedStyle.colorPattern === "neutral") {
+    priorities.push("Subtle textures", "Neutral palette");
+  } else if (calculatedStyle.colorPattern === "natural") {
+    priorities.push("Natural materials", "Organic textures");
+  } else if (calculatedStyle.colorPattern === "bold") {
+    priorities.push("Pattern mixing", "Bold color accents");
+  }
+
+  return priorities.slice(0, 4); // Return top 4 priorities
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -40,6 +116,7 @@ export default function DashboardPage() {
     api.projects.list,
     session ? {} : "skip"
   );
+  const styleQuiz = useQuery(api.styleQuiz.get);
   const createProject = useMutation(api.projects.create);
   const deleteProject = useMutation(api.projects.remove);
 
@@ -59,6 +136,25 @@ export default function DashboardPage() {
   const handleCreateProject = async () => {
     if (!newProject.name) return;
 
+    // Ensure user has a style profile
+    if (!styleQuiz?.calculatedStyle) {
+      toast.error("Please complete the style quiz first", {
+        description: "We need to know your style preferences before creating a project",
+      });
+      return;
+    }
+
+    // Build style profile from quiz response
+    const styleProfile = {
+      primaryStyle: styleQuiz.calculatedStyle.primaryStyle,
+      secondaryStyle: styleQuiz.calculatedStyle.secondaryStyle,
+      colorPreferences: deriveColorPreferences(
+        styleQuiz.calculatedStyle.primaryStyle,
+        styleQuiz.calculatedStyle.secondaryStyle
+      ),
+      priorities: derivePriorities(styleQuiz.calculatedStyle),
+    };
+
     try {
       await createProject({
         name: newProject.name,
@@ -70,6 +166,7 @@ export default function DashboardPage() {
               currency: "USD",
             }
           : undefined,
+        styleProfile,
       });
 
       setNewProject({
@@ -97,41 +194,36 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-surface-page">
-      {/* Header */}
-      <header className="bg-surface-elevated border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-text-primary">
-              Interior Advisor
-            </Link>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <Link href="/style">
-                <Button variant="ghost">My Style</Button>
-              </Link>
-              <Link href="/discover">
-                <Button variant="outline">Discover Your Style</Button>
-              </Link>
-              <Button
-                variant="ghost"
-                onClick={async () => {
-                  await authClient.signOut();
-                  router.push("/sign-in");
-                }}
-              >
-                Sign Out
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="container mx-auto px-4 py-8">
+        {!styleQuiz?.calculatedStyle && (
+          <Card className="mb-6 border-primary/50 bg-primary/5">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-4">
+                <div className="text-primary">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold mb-1">Discover Your Style First</h3>
+                  <p className="text-sm text-text-secondary mb-3">
+                    Before creating a project, take our quick style quiz to help us provide personalized recommendations.
+                  </p>
+                  <Link href="/discover">
+                    <Button size="sm">Take Style Quiz</Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">My Projects</h1>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button>New Project</Button>
+              <Button disabled={!styleQuiz?.calculatedStyle}>New Project</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -204,11 +296,20 @@ export default function DashboardPage() {
               </div>
               <h3 className="text-xl font-semibold mb-2">No projects yet</h3>
               <p className="text-text-tertiary mb-4">
-                Create your first project to start getting design recommendations
+                {styleQuiz?.calculatedStyle
+                  ? "Create your first project to start getting design recommendations"
+                  : "Take the style quiz first, then create your first project"
+                }
               </p>
-              <Button onClick={() => setIsCreateOpen(true)}>
-                Create Your First Project
-              </Button>
+              {styleQuiz?.calculatedStyle ? (
+                <Button onClick={() => setIsCreateOpen(true)}>
+                  Create Your First Project
+                </Button>
+              ) : (
+                <Link href="/discover">
+                  <Button>Take Style Quiz</Button>
+                </Link>
+              )}
             </CardContent>
           </Card>
         ) : (
@@ -268,7 +369,7 @@ export default function DashboardPage() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete project?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This will permanently delete "{project.name}" and all its rooms, photos, analyses, and recommendations. This action cannot be undone.
+                            This will permanently delete &quot;{project.name}&quot; and all its rooms, photos, analyses, and recommendations. This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>

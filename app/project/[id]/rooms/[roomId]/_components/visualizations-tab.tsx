@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Maximize2 } from "lucide-react";
+import { Maximize2, Trash2 } from "lucide-react";
 
 interface VisualizationData {
   _id: Id<"visualizations">;
@@ -68,8 +68,8 @@ export function VisualizationsTab({
                     </p>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="xs" variant="destructive">
-                          Delete
+                        <Button size="icon" variant="destructive" className="h-7 w-7" aria-label="Delete visualization">
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>

@@ -1,16 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Navbar } from "@/components/navbar";
 import {
   EMOTIONAL_VIBE_QUESTION,
   VISUAL_ANCHOR_QUESTION,
@@ -38,8 +36,6 @@ interface CalculatedStyle {
 }
 
 export default function DiscoverPage() {
-  const router = useRouter();
-  const { data: session } = authClient.useSession();
   const saveQuiz = useMutation(api.styleQuiz.save);
 
   const [step, setStep] = useState<Step>("intro");
@@ -118,20 +114,7 @@ export default function DiscoverPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-accent-brand-light to-surface-elevated">
-      {/* Header */}
-      <header className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-text-primary">
-            Interior Advisor
-          </Link>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <Button variant="ghost" onClick={() => router.push("/dashboard")}>
-              Skip to Dashboard
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {step !== "intro" && step !== "results" && (
         <div className="container mx-auto px-4 mb-8">
