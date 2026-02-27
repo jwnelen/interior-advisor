@@ -26,10 +26,49 @@ interface SerpApiShoppingResult {
   link?: string;
   product_link?: string;
   source?: string;
+  serpapi_product_api?: string;
 }
 
 interface SerpApiResponse {
   shopping_results?: SerpApiShoppingResult[];
+}
+
+interface SerpApiProductResponse {
+  sellers_results?: {
+    online_sellers?: Array<{
+      name?: string;
+      link?: string;
+      price?: string;
+    }>;
+  };
+}
+
+async function resolveIkeaUrl(result: SerpApiShoppingResult, serpApiKey: string): Promise<string | null> {
+  // Check direct links first
+  if (result.product_link?.includes("ikea.com")) return result.product_link;
+  if (result.link?.includes("ikea.com")) return result.link;
+
+  // Fall back to fetching the SerpAPI product details to get real seller URLs
+  if (!result.serpapi_product_api) return null;
+
+  try {
+    const productUrl = new URL(result.serpapi_product_api);
+    productUrl.searchParams.set("api_key", serpApiKey);
+
+    const res = await fetch(productUrl.toString());
+    if (!res.ok) return null;
+
+    const data = await res.json() as SerpApiProductResponse;
+    const sellers = data.sellers_results?.online_sellers ?? [];
+
+    const ikeaSeller = sellers.find(
+      (s) => s.link?.includes("ikea.com") || s.name?.toLowerCase().includes("ikea")
+    );
+
+    return ikeaSeller?.link?.includes("ikea.com") ? ikeaSeller.link : null;
+  } catch {
+    return null;
+  }
 }
 
 function buildSearchQuery(title: string, category: string): string {
@@ -126,13 +165,7 @@ export const searchIkeaForRecommendations = internalAction({
         });
 
         if (ikeaResult) {
-          // Prefer product_link (direct retailer URL) over link (Google URL)
-          const productUrl =
-            (ikeaResult.product_link?.includes("ikea.com") ? ikeaResult.product_link : null) ??
-            (ikeaResult.link?.includes("ikea.com") ? ikeaResult.link : null) ??
-            ikeaResult.product_link ??
-            ikeaResult.link ??
-            "";
+          const productUrl = await resolveIkeaUrl(ikeaResult, serpApiKey);
           const imageUrl = ikeaResult.thumbnail ?? "";
           const price = ikeaResult.price ?? "";
 
@@ -147,7 +180,9 @@ export const searchIkeaForRecommendations = internalAction({
                 fetchedAt: Date.now(),
               },
             });
-            logger.info("Found IKEA product", { itemId: item.id, name: ikeaResult.title });
+            logger.info("Found IKEA product", { itemId: item.id, name: ikeaResult.title, productUrl });
+          } else {
+            logger.info("Could not resolve IKEA URL for item", { itemId: item.id });
           }
         } else {
           logger.info("No IKEA result found for item", { itemId: item.id, query });
