@@ -214,7 +214,7 @@ export default defineSchema({
     userId: v.optional(v.string()),
     projectId: v.optional(v.id("projects")),
     roomId: v.optional(v.id("rooms")),
-    provider: v.union(v.literal("openai"), v.literal("replicate")),
+    provider: v.union(v.literal("openai"), v.literal("replicate"), v.literal("google")),
     model: v.string(),
     operation: v.union(
       v.literal("scene_analysis"),

@@ -24,7 +24,7 @@ function toSortedMetrics(values: Map<string, { requests: number; estimatedCostUs
 
 export const track = internalMutation({
   args: {
-    provider: v.union(v.literal("openai"), v.literal("replicate")),
+    provider: v.union(v.literal("openai"), v.literal("replicate"), v.literal("google")),
     model: v.string(),
     operation: v.union(
       v.literal("scene_analysis"),

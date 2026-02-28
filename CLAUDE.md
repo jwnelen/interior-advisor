@@ -11,7 +11,7 @@ AI-powered interior design assistant. Users upload room photos, get AI scene ana
 - **Frontend:** Next.js 16 (App Router), React 19, TypeScript
 - **Backend:** Convex (real-time BaaS — database, file storage, serverless functions)
 - **Styling:** Tailwind CSS v4, shadcn/ui (New York style, lucide-react icons)
-- **AI:** OpenAI GPT-4o (vision analysis + recommendation text), Replicate SDXL (image generation with ControlNet)
+- **AI:** OpenAI GPT-4o (vision analysis + recommendation text), Google Gemini (image generation)
 
 ## Commands
 
@@ -31,14 +31,14 @@ Both `npm run dev` and `npx convex dev` must run simultaneously during developme
 
 1. React components use Convex hooks (`useQuery`, `useMutation`) for real-time data
 2. Mutations trigger internal actions via `scheduler.runAfter()` for AI processing
-3. Internal actions call external APIs (OpenAI, Replicate), then write results back via `ctx.runMutation()`
+3. Internal actions call external APIs (OpenAI, Google Gemini), then write results back via `ctx.runMutation()`
 4. UI updates automatically through Convex real-time subscriptions — no manual refetching needed
 
 ### AI Pipeline (3 stages)
 
 1. **Scene Analysis** (`convex/ai/sceneAnalysis.ts`): GPT-4o Vision analyzes uploaded room photo → furniture, lighting, colors, layout, style
 2. **Recommendations** (`convex/ai/advisor.ts`): GPT-4o generates two tiers — "quick_wins" (<$200, DIY) and "transformations" ($200-2000)
-3. **Visualization** (`convex/ai/imageGeneration.ts`): Replicate SDXL generates room transformation images using ControlNet to preserve room structure
+3. **Visualization** (`convex/ai/imageGeneration.ts`): Google Gemini generates room transformation images
 
 ### Session Management
 
@@ -81,12 +81,12 @@ All async operations (analyses, recommendations, visualizations) use status trac
 - `NEXT_PUBLIC_CONVEX_URL` — Convex deployment URL (client-side)
 - `CONVEX_DEPLOYMENT` — Convex project identifier
 - `OPENAI_API_KEY` — Set in Convex dashboard, used by internal actions only
-- `REPLICATE_API_TOKEN` — Set in Convex dashboard, used by internal actions only
+- `GOOGLE_GEMINI_API_KEY` — Set in Convex dashboard, used by internal actions only
 
 See `.env.local.example` for template.
 
 ## Conventions
 
 - Path alias: `@/*` maps to project root (e.g., `@/components/ui/button`)
-- `next.config.ts` allowlists remote image domains for Convex storage and Replicate delivery
+- `next.config.ts` allowlists remote image domains for Convex storage
 - Convex auto-generates types in `convex/_generated/` — import API from `convex/_generated/api`

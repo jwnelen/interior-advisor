@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.10.10",
+    "@google/genai": "^1.43.0",
     "@sentry/nextjs": "^10.38.0",
     "@vercel/analytics": "^1.6.1",
     "better-auth": "1.4.9",
