@@ -97,6 +97,9 @@ interface StyleProfile {
   secondaryStyle?: string;
   colorPreferences: string[];
   priorities: string[];
+  emotionalVibe: string;
+  decorDensity: string;
+  colorPattern: string;
 }
 
 const STYLE_DESCRIPTIONS: Record<string, string> = {
@@ -192,6 +195,9 @@ function buildStyleProfile(calculatedStyle: CalculatedStyle): StyleProfile {
     secondaryStyle: calculatedStyle.secondaryStyle,
     colorPreferences,
     priorities,
+    emotionalVibe: calculatedStyle.emotionalVibe,
+    decorDensity: calculatedStyle.decorDensity,
+    colorPattern: calculatedStyle.colorPattern,
   };
 }
 

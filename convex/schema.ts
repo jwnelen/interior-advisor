@@ -19,6 +19,9 @@ export default defineSchema({
       secondaryStyle: v.optional(v.string()),
       colorPreferences: v.array(v.string()),
       priorities: v.array(v.string()),
+      emotionalVibe: v.optional(v.string()),
+      decorDensity: v.optional(v.string()),
+      colorPattern: v.optional(v.string()),
     })),
     constraints: v.optional(v.object({
       rentalFriendly: v.boolean(),
