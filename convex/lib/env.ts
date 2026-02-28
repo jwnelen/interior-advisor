@@ -6,7 +6,7 @@
 export function validateActionEnv(): void {
   const requiredVars = {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    REPLICATE_API_TOKEN: process.env.REPLICATE_API_TOKEN,
+    GOOGLE_GEMINI_API_KEY: process.env.GOOGLE_GEMINI_API_KEY,
     SERP_API_KEY: process.env.SERP_API_KEY,
   };
 
@@ -30,14 +30,11 @@ export function validateActionEnv(): void {
     throw new Error(`Invalid OPENAI_API_KEY format. Must start with "sk-"`);
   }
 
-  if (requiredVars.REPLICATE_API_TOKEN && !requiredVars.REPLICATE_API_TOKEN.startsWith("r8_")) {
-    throw new Error(`Invalid REPLICATE_API_TOKEN format. Must start with "r8_"`);
-  }
 }
 
 // Export validated env vars
 export const env = {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY!,
-  REPLICATE_API_TOKEN: process.env.REPLICATE_API_TOKEN!,
+  GOOGLE_GEMINI_API_KEY: process.env.GOOGLE_GEMINI_API_KEY!,
   SERP_API_KEY: process.env.SERP_API_KEY!,
 };

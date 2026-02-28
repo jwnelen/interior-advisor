@@ -3,10 +3,10 @@
 import { v } from "convex/values";
 import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
-import Replicate from "replicate";
+import { GoogleGenAI } from "@google/genai";
 import { withRetry } from "../lib/retry";
 import { createLogger } from "../lib/logger";
-import { estimateReplicateCostUsd } from "../lib/apiCost";
+import { estimateGeminiImageCostUsd } from "../lib/apiCost";
 
 function buildInteriorPrompt(userPrompt: string): string {
   return [
@@ -16,6 +16,17 @@ function buildInteriorPrompt(userPrompt: string): string {
     "Do not add, remove, or move other objects",
     "Professional real estate photography, natural lighting, highly detailed",
   ].join(", ");
+}
+
+async function fetchImageAsBase64(url: string): Promise<{ data: string; mimeType: string }> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+  }
+  const buffer = await response.arrayBuffer();
+  const data = Buffer.from(buffer).toString("base64");
+  const mimeType = response.headers.get("content-type") || "image/png";
+  return { data, mimeType };
 }
 
 export const generateVisualization = internalAction({
@@ -30,8 +41,8 @@ export const generateVisualization = internalAction({
     ikeaProductImageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const model = "google/nano-banana";
-    let replicateCalled = false;
+    const model = "gemini-3.1-flash-image-preview";
+    let apiCalled = false;
     let estimatedCostUsd = 0;
 
     const logger = createLogger("imageGeneration", {
@@ -56,60 +67,83 @@ export const generateVisualization = internalAction({
 
       logger.info("Retrieved original image URL");
 
-      // Build image_input: selected room photo + optional IKEA product image
-      const imageInput: string[] = [originalUrl];
+      // Fetch original room photo as base64
+      const roomImage = await fetchImageAsBase64(originalUrl);
+
+      // Build prompt parts: text + room image + optional product image
+      const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
+        { text: buildInteriorPrompt(args.prompt) },
+        {
+          inlineData: {
+            mimeType: roomImage.mimeType,
+            data: roomImage.data,
+          },
+        },
+      ];
+
+      // Add IKEA product image if provided
       if (args.ikeaProductImageUrl) {
-        imageInput.push(args.ikeaProductImageUrl);
+        const productImage = await fetchImageAsBase64(args.ikeaProductImageUrl);
+        parts.push({
+          inlineData: {
+            mimeType: productImage.mimeType,
+            data: productImage.data,
+          },
+        });
+        logger.info("Added IKEA product image to prompt");
       }
 
-      logger.info("Built image_input", { count: imageInput.length, hasIkeaProduct: !!args.ikeaProductImageUrl });
-
-      const replicateToken = process.env.REPLICATE_API_TOKEN;
-      if (!replicateToken) {
-        logger.error("Replicate API token not configured");
-        throw new Error("Replicate API token (REPLICATE_API_TOKEN) is not configured");
+      const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
+      if (!apiKey) {
+        logger.error("Google Gemini API key not configured");
+        throw new Error("Google Gemini API key (GOOGLE_GEMINI_API_KEY) is not configured");
       }
 
-      const replicate = new Replicate({ auth: replicateToken });
+      const ai = new GoogleGenAI({ apiKey });
 
-      logger.info("Calling Replicate API", { model });
-      // Wrap Replicate API call in retry logic to handle transient failures
-      const rawOutput = await withRetry(
-        () => replicate.run(
-          model,
-          {
-            input: {
-              prompt: buildInteriorPrompt(args.prompt),
-              image_input: imageInput,
+      logger.info("Calling Gemini API", { model });
+
+      const response = await withRetry(
+        () =>
+          ai.models.generateContent({
+            model,
+            contents: [{ role: "user", parts }],
+            config: {
+              responseModalities: ["IMAGE", "TEXT"],
             },
-          }
-        ),
+          }),
         { maxRetries: 3, baseDelay: 2000, maxDelay: 16000 }
       );
-      replicateCalled = true;
-      estimatedCostUsd = estimateReplicateCostUsd(model, 1);
+      apiCalled = true;
+      estimatedCostUsd = estimateGeminiImageCostUsd(model, 1);
 
-      logger.info("Received Replicate response");
+      logger.info("Received Gemini response");
 
-      const resolved = await resolveVisualizationOutput(rawOutput);
-      let storageId;
-
-      if (resolved.kind === "url") {
-        logger.info("Downloading generated image from URL");
-        const response = await fetch(resolved.url);
-        if (!response.ok) {
-          logger.error("Failed to download generated image", null, {
-            status: response.status,
-            statusText: response.statusText,
-          });
-          throw new Error(`Failed to download generated image: ${response.status} ${response.statusText}`);
-        }
-        const blob = await response.blob();
-        storageId = await ctx.storage.store(blob);
-      } else {
-        logger.info("Storing generated image from blob");
-        storageId = await ctx.storage.store(resolved.blob);
+      // Extract generated image from response
+      const candidate = response.candidates?.[0];
+      if (!candidate?.content?.parts) {
+        throw new Error("No content in Gemini response");
       }
+
+      let imageData: string | null = null;
+      let imageMimeType = "image/png";
+
+      for (const part of candidate.content.parts) {
+        if (part.inlineData) {
+          imageData = part.inlineData.data ?? null;
+          imageMimeType = part.inlineData.mimeType ?? "image/png";
+          break;
+        }
+      }
+
+      if (!imageData) {
+        throw new Error("No image data in Gemini response");
+      }
+
+      // Convert base64 to blob and store
+      const imageBuffer = Buffer.from(imageData, "base64");
+      const blob = new Blob([imageBuffer], { type: imageMimeType });
+      const storageId = await ctx.storage.store(blob);
 
       logger.info("Image stored successfully", { storageId });
 
@@ -127,7 +161,7 @@ export const generateVisualization = internalAction({
 
       try {
         await ctx.runMutation(internal.apiUsage.track, {
-          provider: "replicate",
+          provider: "google",
           model,
           operation: "visualization",
           status: "success",
@@ -148,11 +182,11 @@ export const generateVisualization = internalAction({
 
       try {
         await ctx.runMutation(internal.apiUsage.track, {
-          provider: "replicate",
+          provider: "google",
           model,
           operation: "visualization",
           status: "failed",
-          estimatedCostUsd: replicateCalled ? estimatedCostUsd : 0,
+          estimatedCostUsd: apiCalled ? estimatedCostUsd : 0,
           units: 1,
           roomId: args.roomId,
           errorMessage,
@@ -174,124 +208,3 @@ export const generateVisualization = internalAction({
     }
   },
 });
-
-type ResolvedVisualizationOutput =
-  | { kind: "url"; url: string }
-  | { kind: "blob"; blob: Blob };
-
-type ReplicateOutputObject = {
-  toString?: () => string;
-  url?: unknown;
-  blob?: () => Promise<unknown>;
-  constructor?: { name?: string };
-};
-
-async function resolveVisualizationOutput(output: unknown): Promise<ResolvedVisualizationOutput> {
-  if (!output) {
-    throw new Error("No output from Replicate");
-  }
-
-  const toSafeBlob = (view: ArrayBufferView): Blob => {
-    const bytes = new Uint8Array(view.byteLength);
-    bytes.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength));
-    return new Blob([bytes]);
-  };
-
-  const tryResolve = async (value: unknown): Promise<ResolvedVisualizationOutput | null> => {
-    if (!value) return null;
-
-    if (typeof value === "string") {
-      if (value.startsWith("http")) return { kind: "url", url: value };
-      if (value.startsWith("data:")) {
-        try {
-          const response = await fetch(value);
-          if (response.ok) return { kind: "blob", blob: await response.blob() };
-        } catch (e) {
-          console.error("Failed to fetch data URI:", e);
-        }
-      }
-    }
-
-    if (value instanceof URL) {
-      return { kind: "url", url: value.toString() };
-    }
-
-    if (value instanceof Blob) {
-      return { kind: "blob", blob: value };
-    }
-
-    if (value instanceof ArrayBuffer) {
-      return { kind: "blob", blob: new Blob([new Uint8Array(value)]) };
-    }
-    if (ArrayBuffer.isView(value)) {
-      return { kind: "blob", blob: toSafeBlob(value as ArrayBufferView) };
-    }
-
-    if (typeof value === "object") {
-      const obj = value as ReplicateOutputObject;
-
-      if (typeof obj.toString === "function") {
-        try {
-          const str = obj.toString();
-          if (typeof str === "string" && str.startsWith("http")) {
-            return { kind: "url", url: str };
-          }
-        } catch {
-          /* ignore */
-        }
-      }
-
-      if (obj.url) {
-        if (typeof obj.url === "string" && obj.url.startsWith("http")) {
-          return { kind: "url", url: obj.url };
-        }
-        if (obj.url instanceof URL) {
-          return { kind: "url", url: obj.url.toString() };
-        }
-        if (typeof obj.url === "function") {
-          try {
-            const res = obj.url();
-            if (typeof res === "string" && res.startsWith("http")) return { kind: "url", url: res };
-            if (res instanceof URL) return { kind: "url", url: res.toString() };
-          } catch {
-            /* ignore */
-          }
-        }
-      }
-
-      if (typeof obj.blob === "function") {
-        try {
-          const b = await obj.blob();
-          if (b instanceof Blob) return { kind: "blob", blob: b };
-        } catch {
-          /* ignore */
-        }
-      }
-    }
-
-    return null;
-  };
-
-  if (Array.isArray(output)) {
-    for (const item of output) {
-      const resolved = await tryResolve(item);
-      if (resolved) return resolved;
-    }
-  }
-
-  const resolved = await tryResolve(output);
-  if (resolved) return resolved;
-
-  const diagnostic = {
-    type: typeof output,
-    constructor: typeof output === "object" && output !== null
-      ? (output as ReplicateOutputObject).constructor?.name
-      : undefined,
-    isArray: Array.isArray(output),
-    keys: typeof output === "object" && output !== null ? Object.keys(output) : [],
-    json: JSON.stringify(output),
-  };
-  console.error("Unresolvable Replicate output diagnostic:", diagnostic);
-
-  throw new Error("Unable to determine output asset from Replicate response");
-}
