@@ -135,7 +135,10 @@ export default function DashboardPage() {
     api.apiUsage.getMySummary,
     session ? { days: 30, limit: 5 } : "skip"
   );
-  const styleQuiz = useQuery(api.styleQuiz.get);
+  const styleQuiz = useQuery(
+    api.styleQuiz.get,
+    session ? {} : "skip"
+  );
   const createProject = useMutation(api.projects.create);
   const deleteProject = useMutation(api.projects.remove);
 

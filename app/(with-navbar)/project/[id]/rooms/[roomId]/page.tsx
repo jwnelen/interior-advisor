@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -28,14 +28,21 @@ export default function RoomPage() {
   const params = useParams();
   const projectId = params.id as Id<"projects">;
   const roomId = params.roomId as Id<"rooms">;
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.replace("/sign-in");
+    }
+  }, [session, isPending, router]);
 
   const room = useQuery(api.rooms.getPublic, session ? { id: roomId } : "skip");
   const project = useQuery(api.projects.getPublic, session ? { id: projectId } : "skip");
-  const analysis = useQuery(api.analyses.getByRoom, { roomId });
-  const recommendations = useQuery(api.recommendations.getByRoom, { roomId });
-  const customQuestions = useQuery(api.recommendations.getCustomQuestions, { roomId });
-  const visualizations = useQuery(api.visualizations.getByRoom, { roomId });
+  const analysis = useQuery(api.analyses.getByRoom, session ? { roomId } : "skip");
+  const recommendations = useQuery(api.recommendations.getByRoom, session ? { roomId } : "skip");
+  const customQuestions = useQuery(api.recommendations.getCustomQuestions, session ? { roomId } : "skip");
+  const visualizations = useQuery(api.visualizations.getByRoom, session ? { roomId } : "skip");
   const completedVisualizations =
     visualizations?.filter((vis) => vis.status === "completed" && vis.output?.url) ?? [];
 
@@ -225,7 +232,7 @@ export default function RoomPage() {
     setShowVisDialog(true);
   };
 
-  if (room === undefined || project === undefined) {
+  if (isPending || !session || room === undefined || project === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-text-tertiary">Loading...</p>

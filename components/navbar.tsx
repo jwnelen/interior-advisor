@@ -49,7 +49,7 @@ export function Navbar() {
                   variant="ghost"
                   onClick={async () => {
                     await authClient.signOut();
-                    router.push("/sign-in");
+                    router.replace("/");
                   }}
                 >
                   Sign Out
@@ -110,7 +110,7 @@ export function Navbar() {
               onClick={async () => {
                 closeMobileMenu();
                 await authClient.signOut();
-                router.push("/sign-in");
+                router.replace("/");
               }}
             >
               Sign Out
