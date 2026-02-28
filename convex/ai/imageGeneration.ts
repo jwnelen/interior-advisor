@@ -8,14 +8,57 @@ import { withRetry } from "../lib/retry";
 import { createLogger } from "../lib/logger";
 import { estimateReplicateCostUsd } from "../lib/apiCost";
 
-function buildInteriorPrompt(userPrompt: string): string {
-  return [
+interface StyleProfile {
+  primaryStyle: string;
+  secondaryStyle?: string;
+  colorPreferences: string[];
+  emotionalVibe?: string;
+  decorDensity?: string;
+  colorPattern?: string;
+}
+
+function buildInteriorPrompt(userPrompt: string, styleProfile?: StyleProfile | null): string {
+  const parts = [
     "Photorealistic interior photo of the provided room",
+  ];
+
+  if (styleProfile) {
+    const styleParts: string[] = [];
+    styleParts.push(`${styleProfile.primaryStyle} interior design style`);
+    if (styleProfile.secondaryStyle) {
+      styleParts.push(`with ${styleProfile.secondaryStyle} influences`);
+    }
+    if (styleProfile.emotionalVibe) {
+      const vibeDescriptions: Record<string, string> = {
+        serenity: "serene and calming atmosphere",
+        energy: "energetic and vibrant atmosphere",
+        cozy: "warm and cozy atmosphere",
+        order: "clean and orderly atmosphere",
+      };
+      styleParts.push(vibeDescriptions[styleProfile.emotionalVibe] || "");
+    }
+    if (styleProfile.colorPreferences.length > 0) {
+      styleParts.push(`color palette: ${styleProfile.colorPreferences.slice(0, 4).join(", ")}`);
+    }
+    if (styleProfile.decorDensity) {
+      const densityDescriptions: Record<string, string> = {
+        purist: "minimal decor with clean surfaces",
+        curator: "thoughtfully curated decor",
+        collector: "richly layered decor and accessories",
+      };
+      styleParts.push(densityDescriptions[styleProfile.decorDensity] || "");
+    }
+    parts.push(styleParts.filter(Boolean).join(", "));
+  }
+
+  parts.push(
     "Keep the layout, architecture, camera angle, lighting, materials, and colors unchanged unless explicitly specified",
     `Apply only these changes: ${userPrompt}`,
     "Do not add, remove, or move other objects",
     "Professional real estate photography, natural lighting, highly detailed",
-  ].join(", ");
+  );
+
+  return parts.join(", ");
 }
 
 export const generateVisualization = internalAction({
@@ -48,6 +91,16 @@ export const generateVisualization = internalAction({
         status: "processing",
       });
 
+      // Fetch style profile from the room's project
+      const room = await ctx.runQuery(internal.rooms.get, { id: args.roomId });
+      let styleProfile: StyleProfile | null = null;
+      if (room) {
+        const project = await ctx.runQuery(internal.projects.get, { id: room.projectId });
+        if (project?.styleProfile) {
+          styleProfile = project.styleProfile;
+        }
+      }
+
       const originalUrl = await ctx.storage.getUrl(args.originalPhotoId);
       if (!originalUrl) {
         logger.error("Failed to get original image URL");
@@ -79,7 +132,7 @@ export const generateVisualization = internalAction({
           model,
           {
             input: {
-              prompt: buildInteriorPrompt(args.prompt),
+              prompt: buildInteriorPrompt(args.prompt, styleProfile),
               image_input: imageInput,
             },
           }

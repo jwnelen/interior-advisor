@@ -46,15 +46,22 @@ You must respond with valid JSON matching this exact structure:
   "photoDescriptions": ["short description of what photo 0 shows", "short description of what photo 1 shows"]
 }`;
 
-const SCENE_ANALYSIS_USER_PROMPT = `Analyze these room photographs and provide a detailed assessment combining observations from all provided images. The images show the same room from different angles. Focus on:
+function buildSceneAnalysisUserPrompt(styleProfile?: { primaryStyle: string; secondaryStyle?: string; emotionalVibe?: string } | null): string {
+  let prompt = `Analyze these room photographs and provide a detailed assessment combining observations from all provided images. The images show the same room from different angles. Focus on:
 1. What furniture is present and its current condition/style (cross-reference across photos)
 2. How is the lighting (natural and artificial)
 3. What colors dominate the space
 4. How does the layout work (or not work)
 5. What interior design style best describes this room
-6. For each photo (in order), provide a short description of what area/angle it shows
+6. For each photo (in order), provide a short description of what area/angle it shows`;
 
-Respond with JSON only.`;
+  if (styleProfile) {
+    prompt += `\n\nIMPORTANT CONTEXT: The user's desired style is "${styleProfile.primaryStyle}"${styleProfile.secondaryStyle ? ` with ${styleProfile.secondaryStyle} influences` : ""}.${styleProfile.emotionalVibe ? ` They want the room to feel "${styleProfile.emotionalVibe}".` : ""} In your analysis, note any elements that conflict with or already support their desired style. Include this in the layout issues and style elements.`;
+  }
+
+  prompt += `\n\nRespond with JSON only.`;
+  return prompt;
+}
 
 export const analyze = internalAction({
   args: {
@@ -99,6 +106,16 @@ export const analyze = internalAction({
 
       logger.info("Retrieved image URLs", { urlCount: imageUrls.length });
 
+      // Fetch the room's project to get style profile for context
+      const room = await ctx.runQuery(internal.rooms.get, { id: args.roomId });
+      let styleProfile: { primaryStyle: string; secondaryStyle?: string; emotionalVibe?: string } | null = null;
+      if (room) {
+        const project = await ctx.runQuery(internal.projects.get, { id: room.projectId });
+        if (project?.styleProfile) {
+          styleProfile = project.styleProfile;
+        }
+      }
+
       const contentParts: Array<
         | { type: "image_url"; image_url: { url: string; detail: "high" | "auto" } }
         | { type: "text"; text: string }
@@ -113,7 +130,7 @@ export const analyze = internalAction({
 
       contentParts.push({
         type: "text",
-        text: SCENE_ANALYSIS_USER_PROMPT,
+        text: buildSceneAnalysisUserPrompt(styleProfile),
       });
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });

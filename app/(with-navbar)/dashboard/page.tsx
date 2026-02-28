@@ -172,6 +172,9 @@ export default function DashboardPage() {
         styleQuiz.calculatedStyle.secondaryStyle
       ),
       priorities: derivePriorities(styleQuiz.calculatedStyle),
+      emotionalVibe: styleQuiz.calculatedStyle.emotionalVibe,
+      decorDensity: styleQuiz.calculatedStyle.decorDensity,
+      colorPattern: styleQuiz.calculatedStyle.colorPattern,
     };
 
     try {

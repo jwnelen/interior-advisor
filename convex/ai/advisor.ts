@@ -354,6 +354,9 @@ interface Project {
     secondaryStyle?: string;
     colorPreferences: string[];
     priorities: string[];
+    emotionalVibe?: string;
+    decorDensity?: string;
+    colorPattern?: string;
   };
   budget?: { total: number; spent: number; currency: string };
 }
@@ -405,6 +408,15 @@ ${JSON.stringify(analysis, null, 2)}
     }
     if (project.styleProfile.priorities.length > 0) {
       context += `\n- **Design Priorities**: ${project.styleProfile.priorities.join(", ")}`;
+    }
+    if (project.styleProfile.emotionalVibe) {
+      context += `\n- **Emotional Vibe**: ${project.styleProfile.emotionalVibe}`;
+    }
+    if (project.styleProfile.decorDensity) {
+      context += `\n- **Decor Density**: ${project.styleProfile.decorDensity}`;
+    }
+    if (project.styleProfile.colorPattern) {
+      context += `\n- **Color & Pattern Preference**: ${project.styleProfile.colorPattern}`;
     }
 
     // Add detailed guidance for recommendations based on style profile

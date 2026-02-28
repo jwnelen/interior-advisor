@@ -16,6 +16,9 @@ export interface Project {
     secondaryStyle?: string;
     colorPreferences: string[];
     priorities: string[];
+    emotionalVibe?: string;
+    decorDensity?: string;
+    colorPattern?: string;
   };
   createdAt: number;
   updatedAt: number;
