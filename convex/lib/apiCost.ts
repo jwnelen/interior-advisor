@@ -20,6 +20,10 @@ const DEFAULT_REPLICATE_PRICING_PER_UNIT_USD: Record<string, number> = {
   "google/nano-banana": parsePrice(process.env.REPLICATE_NANO_BANANA_PER_IMAGE_USD, 0.039),
 };
 
+const DEFAULT_GEMINI_IMAGE_PRICING_PER_UNIT_USD: Record<string, number> = {
+  "gemini-3.1-flash-image-preview": parsePrice(process.env.GEMINI_FLASH_IMAGE_PER_IMAGE_USD, 0),
+};
+
 function parsePrice(value: string | undefined, fallback: number): number {
   if (!value) return fallback;
   const parsed = Number(value);
@@ -58,5 +62,11 @@ export function estimateOpenAICostUsd(model: string, usage: OpenAITokenUsage): n
 export function estimateReplicateCostUsd(model: string, units = 1): number {
   const unitPrice = DEFAULT_REPLICATE_PRICING_PER_UNIT_USD[model];
   if (!unitPrice || units <= 0) return 0;
+  return roundUsd(unitPrice * units);
+}
+
+export function estimateGeminiImageCostUsd(model: string, units = 1): number {
+  const unitPrice = DEFAULT_GEMINI_IMAGE_PRICING_PER_UNIT_USD[model];
+  if (unitPrice === undefined || units <= 0) return 0;
   return roundUsd(unitPrice * units);
 }
