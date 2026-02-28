@@ -948,20 +948,20 @@ module.exports = {
 
 ```bash
 # Development
-npx convex dev
+pnpm exec convex dev
 
 # Production
-npx convex deploy
+pnpm exec convex deploy
 ```
 
 ### Build & Deploy
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Run locally
-npm run dev
+pnpm dev
 
 # Deploy to Vercel (auto-deploys on git push)
 vercel

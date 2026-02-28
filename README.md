@@ -11,7 +11,7 @@ AI-powered interior design assistant. Upload room photos, get AI scene analysis,
 
 ## Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 18+ and pnpm
 - Convex account (free tier available at [convex.dev](https://convex.dev))
 - OpenAI API key ([platform.openai.com](https://platform.openai.com))
 - Replicate API key ([replicate.com](https://replicate.com))
@@ -23,13 +23,13 @@ AI-powered interior design assistant. Upload room photos, get AI scene analysis,
 ```bash
 git clone <repository-url>
 cd interior-advisor
-npm install
+pnpm install
 ```
 
 ### 2. Set Up Convex
 
 ```bash
-npx convex dev
+pnpm exec convex dev
 ```
 
 This will:
@@ -64,7 +64,7 @@ NEXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
    - `OPENAI_API_KEY`: Your OpenAI API key (starts with `sk-proj-...`)
    - `REPLICATE_API_TOKEN`: Your Replicate API token (starts with `r8_...`)
 
-5. Restart `npx convex dev` after adding the keys
+5. Restart `pnpm exec convex dev` after adding the keys
 
 ### 4. API Key Rotation
 
@@ -80,10 +80,10 @@ Run both the Next.js dev server and Convex backend simultaneously:
 
 ```bash
 # Terminal 1: Run Convex backend
-npx convex dev
+pnpm exec convex dev
 
 # Terminal 2: Run Next.js frontend
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view the app.
@@ -91,12 +91,12 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 ## Available Commands
 
 ```bash
-npm run dev          # Start Next.js dev server
-npm run build        # Production build
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npx convex dev       # Start Convex backend in dev mode
-npx convex deploy    # Deploy Convex to production
+pnpm dev          # Start Next.js dev server
+pnpm build        # Production build
+pnpm start        # Start production server
+pnpm lint         # Run ESLint
+pnpm exec convex dev       # Start Convex backend in dev mode
+pnpm exec convex deploy    # Deploy Convex to production
 ```
 
 ## Project Structure

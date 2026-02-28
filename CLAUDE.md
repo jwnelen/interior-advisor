@@ -16,14 +16,14 @@ AI-powered interior design assistant. Users upload room photos, get AI scene ana
 ## Commands
 
 ```bash
-npm run dev          # Start Next.js dev server (localhost:3000)
-npx convex dev       # Start Convex backend in dev mode (run alongside Next.js)
-npm run build        # Production build
-npm run lint         # ESLint
-npx convex deploy    # Deploy Convex to production
+pnpm dev          # Start Next.js dev server (localhost:3000)
+pnpm exec convex dev       # Start Convex backend in dev mode (run alongside Next.js)
+pnpm build        # Production build
+pnpm lint         # ESLint
+pnpm exec convex deploy    # Deploy Convex to production
 ```
 
-Both `npm run dev` and `npx convex dev` must run simultaneously during development.
+Both `pnpm dev` and `pnpm exec convex dev` must run simultaneously during development.
 
 ## Architecture
 
