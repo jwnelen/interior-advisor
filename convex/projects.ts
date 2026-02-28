@@ -56,6 +56,9 @@ export const create = mutation({
       secondaryStyle: v.optional(v.string()),
       colorPreferences: v.array(v.string()),
       priorities: v.array(v.string()),
+      emotionalVibe: v.optional(v.string()),
+      decorDensity: v.optional(v.string()),
+      colorPattern: v.optional(v.string()),
     }),
   },
   handler: async (ctx, args) => {
@@ -102,6 +105,9 @@ export const update = mutation({
       secondaryStyle: v.optional(v.string()),
       colorPreferences: v.array(v.string()),
       priorities: v.array(v.string()),
+      emotionalVibe: v.optional(v.string()),
+      decorDensity: v.optional(v.string()),
+      colorPattern: v.optional(v.string()),
     })),
   },
   handler: async (ctx, args) => {
