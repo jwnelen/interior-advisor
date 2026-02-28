@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useQuery, useMutation } from "convex/react";
@@ -45,10 +45,17 @@ import { authClient } from "@/lib/auth-client";
 export default function ProjectPage() {
   const params = useParams();
   const projectId = params.id as Id<"projects">;
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.replace("/sign-in");
+    }
+  }, [session, isPending, router]);
 
   const project = useQuery(api.projects.getPublic, session ? { id: projectId } : "skip");
-  const rooms = useQuery(api.rooms.list, { projectId });
+  const rooms = useQuery(api.rooms.list, session ? { projectId } : "skip");
   const createRoom = useMutation(api.rooms.create);
   const deleteRoom = useMutation(api.rooms.remove);
 
@@ -81,7 +88,7 @@ export default function ProjectPage() {
     }
   };
 
-  if (project === undefined || rooms === undefined) {
+  if (isPending || !session || project === undefined || rooms === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-text-tertiary">Loading...</p>

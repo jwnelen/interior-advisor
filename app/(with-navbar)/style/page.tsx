@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
@@ -13,7 +15,15 @@ import {
 } from "@/lib/style-data";
 
 export default function StylePage() {
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.replace("/sign-in");
+    }
+  }, [session, isPending, router]);
+
   const quizData = useQuery(
     api.styleQuiz.get,
     session ? {} : "skip"

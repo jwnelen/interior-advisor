@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +10,35 @@ import { Sparkles, Mail, ArrowLeft, KeyRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && err.message) {
+    return err.message;
+  }
+
+  if (typeof err === "object" && err !== null) {
+    const maybeMessage = (err as { message?: unknown }).message;
+    if (typeof maybeMessage === "string" && maybeMessage.trim().length > 0) {
+      return maybeMessage;
+    }
+  }
+
+  return fallback;
+}
+
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const { data: session, isPending: isSessionPending } = authClient.useSession();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!isSessionPending && session) {
+      router.replace("/dashboard");
+    }
+  }, [session, isSessionPending, router]);
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +52,7 @@ export default function SignInPage() {
       });
       setStep("code");
     } catch (err) {
-      setError("Failed to send code. Please try again.");
+      setError(getErrorMessage(err, "Failed to send code. Please try again."));
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -47,9 +69,16 @@ export default function SignInPage() {
         email,
         otp,
       });
-      router.push("/dashboard");
+      router.replace("/dashboard");
     } catch (err) {
-      setError("Invalid or expired code. Please try again.");
+      const sessionResult = await authClient.getSession();
+
+      if (sessionResult?.data?.session) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      setError(getErrorMessage(err, "Invalid or expired code. Please try again."));
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -201,6 +230,11 @@ export default function SignInPage() {
               <ArrowLeft className="h-3 w-3" />
               Back to home
             </Link>
+            <div className="mt-2">
+              <Link href="/dashboard" className="text-sm text-text-tertiary hover:text-text-primary">
+                Go to dashboard
+              </Link>
+            </div>
           </div>
         </CardContent>
       </Card>
