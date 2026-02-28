@@ -71,7 +71,7 @@
 ### Pending / TODO
 
 #### High Priority
-- [ ] Set up Convex deployment (`npx convex dev --once --configure=new`)
+- [ ] Set up Convex deployment (`pnpm exec convex dev --once --configure=new`)
 - [ ] Add environment variables (OPENAI_API_KEY, REPLICATE_API_TOKEN)
 - [ ] Test end-to-end flow
 - [ ] Error handling improvements
@@ -106,12 +106,12 @@
 
 1. **Install dependencies:**
    ```bash
-   npm install
+   pnpm install
    ```
 
 2. **Set up Convex:**
    ```bash
-   npx convex dev --once --configure=new
+   pnpm exec convex dev --once --configure=new
    ```
 
 3. **Add environment variables in Convex dashboard:**
@@ -125,11 +125,11 @@
 
 5. **Start development:**
    ```bash
-   npm run dev
+   pnpm dev
    ```
    In another terminal:
    ```bash
-   npx convex dev
+   pnpm exec convex dev
    ```
 
 ---

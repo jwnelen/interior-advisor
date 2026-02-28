@@ -7,7 +7,7 @@ Replaced the console.log placeholder with real Resend email delivery. Magic link
 
 **Before starting, ensure Convex has the API key:**
 ```bash
-npx convex env set RESEND_API_KEY your_key_here
+pnpm exec convex env set RESEND_API_KEY your_key_here
 ```
 
 > **Production note:** The `from` address is currently `onboarding@resend.dev` (Resend's sandbox sender). For production, verify your own domain in the Resend dashboard and update the `from` field to e.g. `Interior Advisor <noreply@yourdomain.com>`.
@@ -91,7 +91,7 @@ All auth requests go through `app/api/auth/[...all]/route.ts`, which proxies the
 
 ## Environment Variables
 
-### Convex (set via `npx convex env set KEY value`)
+### Convex (set via `pnpm exec convex env set KEY value`)
 
 | Variable | Dev value | Production value |
 |---|---|---|
@@ -113,14 +113,14 @@ All auth requests go through `app/api/auth/[...all]/route.ts`, which proxies the
 
 ```bash
 # 1. Deploy Convex backend
-npx convex deploy
+pnpm exec convex deploy
 
 # 2. Point SITE_URL at your production domain
-npx convex env set SITE_URL https://your-app.vercel.app
+pnpm exec convex env set SITE_URL https://your-app.vercel.app
 
 # 3. Set all other Convex env vars for the prod deployment
-npx convex env set BETTER_AUTH_SECRET <secret>
-npx convex env set RESEND_API_KEY <key>
+pnpm exec convex env set BETTER_AUTH_SECRET <secret>
+pnpm exec convex env set RESEND_API_KEY <key>
 # etc.
 
 # 4. Add production env vars to Vercel (or your host)
