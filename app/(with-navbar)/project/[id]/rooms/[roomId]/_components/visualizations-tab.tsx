@@ -1,7 +1,6 @@
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,7 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Maximize2, Trash2 } from "lucide-react";
+import { Loader2, Maximize2, Trash2 } from "lucide-react";
 
 interface VisualizationData {
   _id: Id<"visualizations">;
@@ -132,12 +131,14 @@ function VisualizationPreview({
     );
   }
 
-  if (vis.status === "processing") {
+  if (vis.status === "queued" || vis.status === "processing") {
     return (
       <div className="aspect-video bg-surface-inset flex items-center justify-center">
-        <div className="text-center">
-          <Progress value={50} className="w-32 mb-2" />
-          <p className="text-sm text-text-tertiary">Generating...</p>
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin text-text-tertiary" />
+          <p className="text-sm text-text-tertiary">
+            {vis.status === "queued" ? "Queued..." : "Generating..."}
+          </p>
         </div>
       </div>
     );

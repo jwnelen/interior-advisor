@@ -9,13 +9,13 @@ import { Id } from "@/convex/_generated/dataModel";
 import type { Recommendation } from "@/lib/types";
 import { downscaleImage } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PhotoSection } from "./_components/photo-section";
 import { AnalysisCard } from "./_components/analysis-card";
 import { RecommendationTier } from "./_components/recommendation-tier";
-import { CustomQuestionSection } from "./_components/custom-question-section";
 import { VisualizationsTab } from "./_components/visualizations-tab";
 import { VisualizationDialog } from "./_components/visualization-dialog";
 import { Lightbox } from "./_components/lightbox";
@@ -41,7 +41,6 @@ export default function RoomPage() {
   const project = useQuery(api.projects.getPublic, session ? { id: projectId } : "skip");
   const analysis = useQuery(api.analyses.getByRoom, session ? { roomId } : "skip");
   const recommendations = useQuery(api.recommendations.getByRoom, session ? { roomId } : "skip");
-  const customQuestions = useQuery(api.recommendations.getCustomQuestions, session ? { roomId } : "skip");
   const visualizations = useQuery(api.visualizations.getByRoom, session ? { roomId } : "skip");
   const completedVisualizations =
     visualizations?.filter((vis) => vis.status === "completed" && vis.output?.url) ?? [];
@@ -52,8 +51,6 @@ export default function RoomPage() {
   const generateAnalysis = useMutation(api.analyses.generate);
   const generateRecommendations = useMutation(api.recommendations.generate);
   const regenerateRecommendations = useMutation(api.recommendations.regenerate);
-  const askCustomQuestion = useMutation(api.recommendations.askCustomQuestion);
-  const deleteCustomQuestion = useMutation(api.recommendations.deleteCustomQuestion);
   const generateVisualization = useMutation(api.visualizations.generate);
   const removeVisualization = useMutation(api.visualizations.remove);
   const toggleSelection = useMutation(api.recommendations.toggleItemSelection);
@@ -153,25 +150,12 @@ export default function RoomPage() {
     }
   };
 
-  const handleRegenerateRecommendations = async (tier: "quick_wins" | "transformations") => {
+  const handleRegenerateRecommendations = async (tier: "quick_wins" | "transformations", note?: string) => {
     setGenerating(tier);
     try {
-      await regenerateRecommendations({ roomId, tier });
+      await regenerateRecommendations({ roomId, tier, userNote: note });
     } finally {
       setGenerating(null);
-    }
-  };
-
-  const handleAskQuestion = async (question: string) => {
-    await askCustomQuestion({ roomId, question });
-  };
-
-  const handleDeleteQuestion = async (id: Id<"recommendations">) => {
-    if (!window.confirm("Delete this question and answer?")) return;
-    try {
-      await deleteCustomQuestion({ id });
-    } catch (error) {
-      console.error("Failed to delete question:", error);
     }
   };
 
@@ -235,7 +219,7 @@ export default function RoomPage() {
   if (isPending || !session || room === undefined || project === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-text-tertiary">Loading...</p>
+        <Loader2 className="h-6 w-6 animate-spin text-text-tertiary" />
       </div>
     );
   }
@@ -365,7 +349,7 @@ export default function RoomPage() {
                       generating={generating === "quick_wins"}
                       photos={room.photos}
                       onGenerate={() => handleGenerateRecommendations("quick_wins")}
-                      onRegenerate={() => handleRegenerateRecommendations("quick_wins")}
+                      onRegenerate={(note) => handleRegenerateRecommendations("quick_wins", note)}
                       onToggle={toggleSelection}
                       onVisualize={openVisualizationDialog}
                       emptyMessage="Click Generate to get quick win recommendations"
@@ -377,22 +361,12 @@ export default function RoomPage() {
                       generating={generating === "transformations"}
                       photos={room.photos}
                       onGenerate={() => handleGenerateRecommendations("transformations")}
-                      onRegenerate={() => handleRegenerateRecommendations("transformations")}
+                      onRegenerate={(note) => handleRegenerateRecommendations("transformations", note)}
                       onToggle={toggleSelection}
                       onVisualize={openVisualizationDialog}
                       emptyMessage="Click Generate to get transformation recommendations"
                     />
 
-                    {/* Custom Question Section */}
-                    <CustomQuestionSection
-                      roomId={roomId}
-                      customQuestions={customQuestions ?? []}
-                      photos={room.photos}
-                      onAskQuestion={handleAskQuestion}
-                      onDeleteQuestion={handleDeleteQuestion}
-                      onToggle={toggleSelection}
-                      onVisualize={openVisualizationDialog}
-                    />
                   </div>
                 )}
               </TabsContent>
@@ -418,9 +392,6 @@ export default function RoomPage() {
             <p className="text-sm text-text-secondary">
               <span className="font-medium text-text-primary">{allSelectedItems.length}</span>{" "}
               {allSelectedItems.length === 1 ? "item" : "items"} selected
-              {allSelectedItems.length === 1 && (
-                <span className="text-text-tertiary"> — select one more to combine</span>
-              )}
             </p>
             <div className="flex gap-2">
               <Button
@@ -436,10 +407,9 @@ export default function RoomPage() {
               </Button>
               <Button
                 size="sm"
-                disabled={allSelectedItems.length < 2}
                 onClick={openCombinedVisualizationDialog}
               >
-                Visualize together
+                {allSelectedItems.length === 1 ? "Visualize selected" : "Visualize together"}
               </Button>
             </div>
           </div>

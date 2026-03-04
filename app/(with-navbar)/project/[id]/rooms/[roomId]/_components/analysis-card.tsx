@@ -1,7 +1,7 @@
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 
 interface AnalysisResults {
   style: { detected: string; confidence: number };
@@ -36,17 +36,18 @@ export function AnalysisCard({ analysis, onGenerate, disabled, buttonLabel, hasP
       </CardHeader>
       <CardContent>
         {analysis === undefined ? (
-          <p className="text-sm text-text-tertiary">Checking analysis status...</p>
+          <div className="flex items-center gap-2 text-sm text-text-tertiary">
+            <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+            Checking analysis status...
+          </div>
         ) : analysis === null ? (
           <p className="text-sm text-text-tertiary">
             No analysis yet. Upload photos and generate when ready. All photos will be analyzed together.
           </p>
         ) : analysis.status === "processing" || analysis.status === "pending" ? (
-          <div className="space-y-2">
-            <p className="text-sm text-text-tertiary">
-              {analysis.status === "pending" ? "Queued for analysis..." : "Analyzing your room..."}
-            </p>
-            <Progress value={50} />
+          <div className="flex items-center gap-2 text-sm text-text-tertiary">
+            <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+            {analysis.status === "pending" ? "Queued for analysis..." : "Analyzing your room..."}
           </div>
         ) : analysis.status === "completed" && analysis.results ? (
           <AnalysisResultsDisplay results={analysis.results} />

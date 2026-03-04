@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { RecommendationItem } from "./recommendation-item";
 import type { Recommendation } from "@/lib/types";
 
@@ -23,7 +23,7 @@ interface RecommendationTierProps {
   generating: boolean;
   photos: { storageId: Id<"_storage">; url: string }[];
   onGenerate: () => void;
-  onRegenerate: () => void;
+  onRegenerate: (note?: string) => void;
   onToggle: (args: { id: Id<"recommendations">; itemId: string; selected: boolean }) => void;
   onVisualize: (item: { visualizationPrompt?: string; suggestedPhotoStorageId?: Id<"_storage">; ikeaProduct?: { name: string; price: string; imageUrl: string; productUrl: string; fetchedAt: number } }) => void;
   emptyMessage: string;
@@ -42,12 +42,19 @@ export function RecommendationTier({
   emptyMessage,
 }: RecommendationTierProps) {
   const [showRegenerateDialog, setShowRegenerateDialog] = useState(false);
-  const isGenerating = generating || tier?.status === "generating";
+  const [regenerateNote, setRegenerateNote] = useState("");
+  const isGenerating = generating || tier?.status === "generating" || tier?.status === "pending";
   const hasCompletedRecommendations = tier?.status === "completed" && tier.items.length > 0;
 
   const handleRegenerateConfirm = () => {
     setShowRegenerateDialog(false);
-    onRegenerate();
+    onRegenerate(regenerateNote.trim() || undefined);
+    setRegenerateNote("");
+  };
+
+  const handleRegenerateCancel = () => {
+    setShowRegenerateDialog(false);
+    setRegenerateNote("");
   };
 
   return (
@@ -101,15 +108,34 @@ export function RecommendationTier({
                   item={item}
                   photos={photos}
                   recommendationId={tier._id}
+                  ikeaSearchStatus={tier.ikeaSearchStatus}
                   onToggle={onToggle}
                   onVisualize={onVisualize}
                 />
               ))}
             </div>
-          ) : tier?.status === "generating" ? (
-            <div className="py-8 text-center">
-              <Progress value={50} className="mb-4" />
-              <p className="text-text-tertiary">Generating recommendations...</p>
+          ) : tier?.status === "generating" || tier?.status === "pending" ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="border rounded-lg p-4 animate-pulse">
+                  <div className="flex justify-between mb-3">
+                    <div className="h-4 bg-muted rounded w-1/3" />
+                    <div className="flex gap-1">
+                      <div className="h-5 bg-muted rounded w-12" />
+                      <div className="h-5 bg-muted rounded w-16" />
+                    </div>
+                  </div>
+                  <div className="space-y-2 mb-3">
+                    <div className="h-3 bg-muted rounded w-full" />
+                    <div className="h-3 bg-muted rounded w-4/5" />
+                    <div className="h-3 bg-muted rounded w-2/3" />
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="h-4 bg-muted rounded w-20" />
+                    <div className="h-8 bg-muted rounded w-20" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : tier?.status === "failed" ? (
             <div className="py-8 space-y-4">
@@ -124,7 +150,7 @@ export function RecommendationTier({
         </CardContent>
       </Card>
 
-      <AlertDialog open={showRegenerateDialog} onOpenChange={setShowRegenerateDialog}>
+      <AlertDialog open={showRegenerateDialog} onOpenChange={(open) => { if (!open) handleRegenerateCancel(); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Regenerate Recommendations?</AlertDialogTitle>
@@ -133,8 +159,17 @@ export function RecommendationTier({
               Any visualizations you&apos;ve created will still be available in the Visualizations tab.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="px-1">
+            <Textarea
+              placeholder="Optional: steer the results, e.g. prefer natural materials, focus on lighting, avoid rugs..."
+              value={regenerateNote}
+              onChange={(e) => setRegenerateNote(e.target.value)}
+              rows={3}
+              className="resize-none text-sm"
+            />
+          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleRegenerateCancel}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleRegenerateConfirm}>
               Regenerate
             </AlertDialogAction>
