@@ -12,6 +12,7 @@ interface IkeaProduct {
 }
 
 interface RecommendationItemProps {
+  ikeaSearchStatus?: "pending" | "searching" | "completed" | "failed";
   item: {
     id: string;
     title: string;
@@ -36,9 +37,11 @@ export function RecommendationItem({
   item,
   photos,
   recommendationId,
+  ikeaSearchStatus,
   onToggle,
   onVisualize,
 }: RecommendationItemProps) {
+  const ikeaSearching = ikeaSearchStatus === "pending" || ikeaSearchStatus === "searching";
   const suggestedPhoto = item.suggestedPhotoStorageId
     ? photos.find((p) => p.storageId === item.suggestedPhotoStorageId)
     : null;
@@ -69,7 +72,7 @@ export function RecommendationItem({
           <p className="text-xs text-text-tertiary mt-1">{item.reasoning}</p>
         </div>
       </div>
-      {item.ikeaProduct && (
+      {item.ikeaProduct ? (
         <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-3 p-2 rounded-md border bg-muted/40">
           <img
             src={item.ikeaProduct.imageUrl}
@@ -89,7 +92,15 @@ export function RecommendationItem({
             View on IKEA ↗
           </a>
         </div>
-      )}
+      ) : ikeaSearching ? (
+        <div className="mt-3 flex items-center gap-3 p-2 rounded-md border bg-muted/40 animate-pulse">
+          <div className="w-12 h-12 rounded bg-muted flex-shrink-0" />
+          <div className="flex-1 space-y-1.5">
+            <div className="h-3 bg-muted rounded w-2/3" />
+            <div className="h-3 bg-muted rounded w-1/3" />
+          </div>
+        </div>
+      ) : null}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
         <span className="text-sm font-medium">
           ${item.estimatedCost.min} - ${item.estimatedCost.max}

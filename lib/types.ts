@@ -123,6 +123,7 @@ export interface Recommendation {
   items: RecommendationItem[];
   summary?: string;
   error?: string;
+  ikeaSearchStatus?: "pending" | "searching" | "completed" | "failed";
   createdAt: number;
 }
 

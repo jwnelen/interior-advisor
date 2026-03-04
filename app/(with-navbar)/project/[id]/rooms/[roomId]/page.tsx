@@ -9,6 +9,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import type { Recommendation } from "@/lib/types";
 import { downscaleImage } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -218,7 +219,7 @@ export default function RoomPage() {
   if (isPending || !session || room === undefined || project === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-text-tertiary">Loading...</p>
+        <Loader2 className="h-6 w-6 animate-spin text-text-tertiary" />
       </div>
     );
   }
@@ -391,9 +392,6 @@ export default function RoomPage() {
             <p className="text-sm text-text-secondary">
               <span className="font-medium text-text-primary">{allSelectedItems.length}</span>{" "}
               {allSelectedItems.length === 1 ? "item" : "items"} selected
-              {allSelectedItems.length === 1 && (
-                <span className="text-text-tertiary"> — select one more to combine</span>
-              )}
             </p>
             <div className="flex gap-2">
               <Button
@@ -409,10 +407,9 @@ export default function RoomPage() {
               </Button>
               <Button
                 size="sm"
-                disabled={allSelectedItems.length < 2}
                 onClick={openCombinedVisualizationDialog}
               >
-                Visualize together
+                {allSelectedItems.length === 1 ? "Visualize selected" : "Visualize together"}
               </Button>
             </div>
           </div>

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,7 +43,7 @@ export function RecommendationTier({
 }: RecommendationTierProps) {
   const [showRegenerateDialog, setShowRegenerateDialog] = useState(false);
   const [regenerateNote, setRegenerateNote] = useState("");
-  const isGenerating = generating || tier?.status === "generating";
+  const isGenerating = generating || tier?.status === "generating" || tier?.status === "pending";
   const hasCompletedRecommendations = tier?.status === "completed" && tier.items.length > 0;
 
   const handleRegenerateConfirm = () => {
@@ -109,15 +108,34 @@ export function RecommendationTier({
                   item={item}
                   photos={photos}
                   recommendationId={tier._id}
+                  ikeaSearchStatus={tier.ikeaSearchStatus}
                   onToggle={onToggle}
                   onVisualize={onVisualize}
                 />
               ))}
             </div>
-          ) : tier?.status === "generating" ? (
-            <div className="py-8 text-center">
-              <Progress value={50} className="mb-4" />
-              <p className="text-text-tertiary">Generating recommendations...</p>
+          ) : tier?.status === "generating" || tier?.status === "pending" ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="border rounded-lg p-4 animate-pulse">
+                  <div className="flex justify-between mb-3">
+                    <div className="h-4 bg-muted rounded w-1/3" />
+                    <div className="flex gap-1">
+                      <div className="h-5 bg-muted rounded w-12" />
+                      <div className="h-5 bg-muted rounded w-16" />
+                    </div>
+                  </div>
+                  <div className="space-y-2 mb-3">
+                    <div className="h-3 bg-muted rounded w-full" />
+                    <div className="h-3 bg-muted rounded w-4/5" />
+                    <div className="h-3 bg-muted rounded w-2/3" />
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="h-4 bg-muted rounded w-20" />
+                    <div className="h-8 bg-muted rounded w-20" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : tier?.status === "failed" ? (
             <div className="py-8 space-y-4">

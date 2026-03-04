@@ -95,6 +95,7 @@ export const generateVisualization = internalAction({
     });
 
     try {
+      const t0 = Date.now();
       logger.info("Starting image generation");
 
       await ctx.runMutation(internal.visualizations.updateStatus, {
@@ -102,8 +103,17 @@ export const generateVisualization = internalAction({
         status: "processing",
       });
 
-      // Fetch style profile from the room's project
-      const room = await ctx.runQuery(internal.rooms.get, { id: args.roomId });
+      // Fetch style profile and original image URL in parallel
+      const [room, originalUrl] = await Promise.all([
+        ctx.runQuery(internal.rooms.get, { id: args.roomId }),
+        ctx.storage.getUrl(args.originalPhotoId),
+      ]);
+
+      if (!originalUrl) {
+        logger.error("Failed to get original image URL");
+        throw new Error("Failed to get original image URL");
+      }
+
       let styleProfile: StyleProfile | null = null;
       if (room) {
         const project = await ctx.runQuery(internal.projects.get, { id: room.projectId });
@@ -112,16 +122,18 @@ export const generateVisualization = internalAction({
         }
       }
 
-      const originalUrl = await ctx.storage.getUrl(args.originalPhotoId);
-      if (!originalUrl) {
-        logger.error("Failed to get original image URL");
-        throw new Error("Failed to get original image URL");
-      }
+      logger.info(`Setup done in ${Date.now() - t0}ms`);
 
-      logger.info("Retrieved original image URL");
-
-      // Fetch original room photo as base64
-      const roomImage = await fetchImageAsBase64(originalUrl);
+      // Fetch room photo and IKEA product image in parallel
+      const t1 = Date.now();
+      const [roomImage, productImage] = await Promise.all([
+        fetchImageAsBase64(originalUrl),
+        args.ikeaProductImageUrl ? fetchImageAsBase64(args.ikeaProductImageUrl) : Promise.resolve(null),
+      ]);
+      logger.info(`Image fetch done in ${Date.now() - t1}ms`, {
+        roomImageBytes: Math.round(roomImage.data.length * 0.75),
+        hasIkeaProduct: !!productImage,
+      });
 
       // Build prompt parts: text + room image + optional product image
       const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
@@ -135,8 +147,7 @@ export const generateVisualization = internalAction({
       ];
 
       // Add IKEA product image if provided
-      if (args.ikeaProductImageUrl) {
-        const productImage = await fetchImageAsBase64(args.ikeaProductImageUrl);
+      if (productImage) {
         parts.push({
           inlineData: {
             mimeType: productImage.mimeType,
@@ -154,6 +165,7 @@ export const generateVisualization = internalAction({
 
       const ai = new GoogleGenAI({ apiKey });
 
+      const t2 = Date.now();
       logger.info("Calling Gemini API", { model });
 
       const response = await withRetry(
@@ -170,7 +182,7 @@ export const generateVisualization = internalAction({
       apiCalled = true;
       estimatedCostUsd = estimateGeminiImageCostUsd(model, 1);
 
-      logger.info("Received Gemini response");
+      logger.info(`Gemini API responded in ${Date.now() - t2}ms`);
 
       // Extract generated image from response
       const candidate = response.candidates?.[0];
@@ -198,7 +210,7 @@ export const generateVisualization = internalAction({
       const blob = new Blob([imageBuffer], { type: imageMimeType });
       const storageId = await ctx.storage.store(blob);
 
-      logger.info("Image stored successfully", { storageId });
+      logger.info(`Image stored in ${Date.now() - t2}ms total (incl. Gemini)`, { storageId });
 
       const url = await ctx.storage.getUrl(storageId);
       if (!url) {
@@ -228,7 +240,7 @@ export const generateVisualization = internalAction({
         });
       }
 
-      logger.info("Visualization generation completed successfully");
+      logger.info(`Visualization generation completed in ${Date.now() - t0}ms total`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error("Image generation failed", error);
