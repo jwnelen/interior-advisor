@@ -255,6 +255,39 @@ export default function RoomPage() {
 
   const quickWins = (recommendations as Recommendation[] | undefined)?.find((r) => r.tier === "quick_wins");
   const transformations = (recommendations as Recommendation[] | undefined)?.find((r) => r.tier === "transformations");
+
+  const allSelectedItems = [
+    ...(quickWins?.items ?? []).filter((item) => item.selected).map((item) => ({ ...item, recommendationId: quickWins!._id })),
+    ...(transformations?.items ?? []).filter((item) => item.selected).map((item) => ({ ...item, recommendationId: transformations!._id })),
+  ];
+
+  const openCombinedVisualizationDialog = () => {
+    const promptLines = allSelectedItems
+      .filter((item) => item.visualizationPrompt)
+      .map((item, i) => {
+        let line = `${i + 1}. ${item.visualizationPrompt}`;
+        if (item.ikeaProduct) {
+          line += ` Use the IKEA product "${item.ikeaProduct.name}" (${item.ikeaProduct.price}).`;
+        }
+        return line;
+      });
+
+    const combinedPrompt =
+      promptLines.length > 0
+        ? `Make the following changes:\n${promptLines.join("\n")}`
+        : DEFAULT_VIS_PROMPT;
+
+    const firstPhotoId =
+      allSelectedItems.find((item) => item.suggestedPhotoStorageId)?.suggestedPhotoStorageId ??
+      room.photos[0]?.storageId ?? null;
+
+    setVisualizationPrompt(combinedPrompt);
+    setSelectedPhotoStorageId(firstPhotoId);
+    setIkeaProductImageUrl(null);
+    setIkeaProductForDialog(null);
+    setShowVisDialog(true);
+  };
+
   const analysisIsRunning = analysis?.status === "processing" || analysis?.status === "pending";
   const analysisButtonDisabled = room.photos.length === 0 || uploading || analyzingRoom || analysisIsRunning;
   const analysisButtonLabel = analyzingRoom || analysisIsRunning
@@ -378,6 +411,40 @@ export default function RoomPage() {
           </div>
         </div>
       </main>
+
+      {allSelectedItems.length >= 1 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <p className="text-sm text-text-secondary">
+              <span className="font-medium text-text-primary">{allSelectedItems.length}</span>{" "}
+              {allSelectedItems.length === 1 ? "item" : "items"} selected
+              {allSelectedItems.length === 1 && (
+                <span className="text-text-tertiary"> — select one more to combine</span>
+              )}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  allSelectedItems.forEach((item) =>
+                    toggleSelection({ id: item.recommendationId, itemId: item.id, selected: false })
+                  );
+                }}
+              >
+                Clear
+              </Button>
+              <Button
+                size="sm"
+                disabled={allSelectedItems.length < 2}
+                onClick={openCombinedVisualizationDialog}
+              >
+                Visualize together
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <VisualizationDialog
         key={ikeaProductForDialog?.imageUrl ?? "no-ikea-product"}

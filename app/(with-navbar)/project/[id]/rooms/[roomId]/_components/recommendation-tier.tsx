@@ -94,6 +94,7 @@ export function RecommendationTier({
         <CardContent>
           {hasCompletedRecommendations ? (
             <div className="space-y-4">
+              <p className="text-xs text-text-tertiary">Select items to combine into one visualization</p>
               {tier.items.map((item) => (
                 <RecommendationItem
                   key={item.id}
