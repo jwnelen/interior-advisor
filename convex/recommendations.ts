@@ -309,6 +309,7 @@ export const regenerate = mutation({
   args: {
     roomId: v.id("rooms"),
     tier: v.union(v.literal("quick_wins"), v.literal("transformations")),
+    userNote: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await requireUserId(ctx);
@@ -360,6 +361,7 @@ export const regenerate = mutation({
         analysisId: analysis._id,
         tier: args.tier,
         recommendationId,
+        userNote: args.userNote,
       });
 
       return recommendationId;
@@ -371,6 +373,7 @@ export const regenerate = mutation({
       analysisId: analysis._id,
       tier: args.tier,
       recommendationId: existing._id,
+      userNote: args.userNote,
     });
 
     return existing._id;

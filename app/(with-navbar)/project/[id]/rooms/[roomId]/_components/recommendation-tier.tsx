@@ -13,6 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { RecommendationItem } from "./recommendation-item";
 import type { Recommendation } from "@/lib/types";
 
@@ -23,7 +24,7 @@ interface RecommendationTierProps {
   generating: boolean;
   photos: { storageId: Id<"_storage">; url: string }[];
   onGenerate: () => void;
-  onRegenerate: () => void;
+  onRegenerate: (note?: string) => void;
   onToggle: (args: { id: Id<"recommendations">; itemId: string; selected: boolean }) => void;
   onVisualize: (item: { visualizationPrompt?: string; suggestedPhotoStorageId?: Id<"_storage">; ikeaProduct?: { name: string; price: string; imageUrl: string; productUrl: string; fetchedAt: number } }) => void;
   emptyMessage: string;
@@ -42,12 +43,19 @@ export function RecommendationTier({
   emptyMessage,
 }: RecommendationTierProps) {
   const [showRegenerateDialog, setShowRegenerateDialog] = useState(false);
+  const [regenerateNote, setRegenerateNote] = useState("");
   const isGenerating = generating || tier?.status === "generating";
   const hasCompletedRecommendations = tier?.status === "completed" && tier.items.length > 0;
 
   const handleRegenerateConfirm = () => {
     setShowRegenerateDialog(false);
-    onRegenerate();
+    onRegenerate(regenerateNote.trim() || undefined);
+    setRegenerateNote("");
+  };
+
+  const handleRegenerateCancel = () => {
+    setShowRegenerateDialog(false);
+    setRegenerateNote("");
   };
 
   return (
@@ -124,7 +132,7 @@ export function RecommendationTier({
         </CardContent>
       </Card>
 
-      <AlertDialog open={showRegenerateDialog} onOpenChange={setShowRegenerateDialog}>
+      <AlertDialog open={showRegenerateDialog} onOpenChange={(open) => { if (!open) handleRegenerateCancel(); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Regenerate Recommendations?</AlertDialogTitle>
@@ -133,8 +141,17 @@ export function RecommendationTier({
               Any visualizations you&apos;ve created will still be available in the Visualizations tab.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="px-1">
+            <Textarea
+              placeholder="Optional: steer the results, e.g. prefer natural materials, focus on lighting, avoid rugs..."
+              value={regenerateNote}
+              onChange={(e) => setRegenerateNote(e.target.value)}
+              rows={3}
+              className="resize-none text-sm"
+            />
+          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleRegenerateCancel}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleRegenerateConfirm}>
               Regenerate
             </AlertDialogAction>

@@ -186,6 +186,7 @@ export const generateRecommendations = internalAction({
     analysisId: v.id("analyses"),
     tier: v.union(v.literal("quick_wins"), v.literal("transformations")),
     recommendationId: v.id("recommendations"),
+    userNote: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const model = "gpt-4o";
@@ -216,6 +217,9 @@ export const generateRecommendations = internalAction({
       const project = await ctx.runQuery(internal.projects.get, { id: room.projectId });
       const context = buildContext(analysis.results, room, project);
       const tierPrompt = args.tier === "quick_wins" ? QUICK_WINS_PROMPT : TRANSFORMATIONS_PROMPT;
+      const userContext = args.userNote
+        ? `\n\n## User Preference\n"${args.userNote}"\n\nPlease take this preference into account when generating recommendations.`
+        : "";
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -227,7 +231,7 @@ export const generateRecommendations = internalAction({
           model,
           messages: [
             { role: "system", content: ADVISOR_SYSTEM_PROMPT },
-            { role: "user", content: context + "\n\n" + tierPrompt },
+            { role: "user", content: context + "\n\n" + tierPrompt + userContext },
           ],
           response_format: { type: "json_object" },
           max_tokens: 3000,
