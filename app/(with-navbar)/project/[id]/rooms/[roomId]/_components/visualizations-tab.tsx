@@ -63,9 +63,16 @@ export function VisualizationsTab({
                 />
                 <div className="p-3">
                   <div className="flex flex-col-reverse sm:flex-row sm:items-start gap-3">
-                    <p className="text-sm text-text-secondary whitespace-pre-wrap break-words">
-                      {vis.input.prompt}
-                    </p>
+                    <div>
+                      {vis.input.prompt.startsWith("Make the following changes:") && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 mb-1">
+                          Combined
+                        </span>
+                      )}
+                      <p className="text-sm text-text-secondary whitespace-pre-wrap break-words">
+                        {vis.input.prompt}
+                      </p>
+                    </div>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button size="icon" variant="destructive" className="h-7 w-7 self-end sm:self-auto shrink-0" aria-label="Delete visualization">
