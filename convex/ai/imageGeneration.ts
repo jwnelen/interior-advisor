@@ -235,7 +235,7 @@ async function compactPrompt(prompt: string): Promise<string> {
       },
       { role: "user", content: prompt },
     ],
-    max_tokens: 100,
+    max_completion_tokens: 100,
   });
   return response.choices[0].message.content?.trim() ?? prompt;
 }

@@ -239,7 +239,7 @@ export const generateRecommendations = internalAction({
             { role: "user", content: context + "\n\n" + tierPrompt + userContext },
           ],
           response_format: { type: "json_object" },
-          max_tokens: 3000,
+          max_completion_tokens: 3000,
         }),
         { maxRetries: 3, baseDelay: 1000, maxDelay: 8000 }
       );
@@ -516,7 +516,7 @@ ${context}`;
           { role: "user", content: userPrompt },
         ],
         response_format: { type: "json_object" },
-        max_tokens: 2000,
+        max_completion_tokens: 2000,
       });
 
       const content = response.choices[0].message.content;
