@@ -9,8 +9,11 @@ type OpenAIPrice = {
   outputPer1MUsd: number;
 };
 
+const OPENAI_MODEL = process.env.OPENAI_MODEL ?? "gpt-4o";
+const GEMINI_IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL ?? "gemini-3.1-flash-image-preview";
+
 const DEFAULT_OPENAI_PRICING: Record<string, OpenAIPrice> = {
-  "gpt-4o": {
+  [OPENAI_MODEL]: {
     inputPer1MUsd: parsePrice(process.env.OPENAI_GPT4O_INPUT_PER_1M_USD, 2.5),
     outputPer1MUsd: parsePrice(process.env.OPENAI_GPT4O_OUTPUT_PER_1M_USD, 10),
   },
@@ -21,7 +24,7 @@ const DEFAULT_REPLICATE_PRICING_PER_UNIT_USD: Record<string, number> = {
 };
 
 const DEFAULT_GEMINI_IMAGE_PRICING_PER_UNIT_USD: Record<string, number> = {
-  "gemini-3.1-flash-image-preview": parsePrice(process.env.GEMINI_FLASH_IMAGE_PER_IMAGE_USD, 0),
+  [GEMINI_IMAGE_MODEL]: parsePrice(process.env.GEMINI_FLASH_IMAGE_PER_IMAGE_USD, 0),
 };
 
 function parsePrice(value: string | undefined, fallback: number): number {
