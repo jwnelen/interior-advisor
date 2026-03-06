@@ -370,7 +370,7 @@ export const generateVisualization = internalAction({
           () => ai.models.generateContent({
             model,
             contents: [{ role: "user", parts: partsToSend }],
-            config: { responseModalities: ["IMAGE", "TEXT"] },
+            config: { responseModalities: ["TEXT", "IMAGE"] },
           }),
           { maxRetries: 3, baseDelay: 2000, maxDelay: 16000 }
         );
