@@ -81,7 +81,7 @@ export function validateDimensions(
  * Validates visualization prompt is within safe limits
  */
 export function validatePrompt(prompt: string): void {
-  validateStringLength(prompt, "Prompt", 1, 1000);
+  validateStringLength(prompt, "Prompt", 1, 4000);
   validateNoXSS(prompt, "Prompt");
 }
 

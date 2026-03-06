@@ -63,8 +63,8 @@ export default function RoomPage() {
   const [visualizationPrompt, setVisualizationPrompt] = useState("");
   const [showVisDialog, setShowVisDialog] = useState(false);
   const [selectedPhotoStorageId, setSelectedPhotoStorageId] = useState<Id<"_storage"> | null>(null);
-  const [ikeaProductImageUrl, setIkeaProductImageUrl] = useState<string | null>(null);
-  const [ikeaProductForDialog, setIkeaProductForDialog] = useState<{ name: string; price: string; imageUrl: string; productUrl: string } | null>(null);
+  const [productImageUrl, setProductImageUrl] = useState<string | null>(null);
+  const [productForDialog, setProductForDialog] = useState<{ name: string; price: string; imageUrl: string; productUrl: string; storeName: string } | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("recommendations");
 
@@ -159,7 +159,7 @@ export default function RoomPage() {
     }
   };
 
-  const handleGenerateVisualization = async (includeIkeaProduct: boolean) => {
+  const handleGenerateVisualization = async (includeProduct: boolean) => {
     if (!visualizationPrompt) return;
     try {
       await generateVisualization({
@@ -167,14 +167,14 @@ export default function RoomPage() {
         prompt: visualizationPrompt,
         type: "full_render",
         photoStorageId: selectedPhotoStorageId ?? undefined,
-        ikeaProductImageUrl: includeIkeaProduct ? (ikeaProductImageUrl ?? undefined) : undefined,
-        ikeaProduct: includeIkeaProduct ? (ikeaProductForDialog ?? undefined) : undefined,
+        productImageUrl: includeProduct ? (productImageUrl ?? undefined) : undefined,
+        suggestedProduct: includeProduct ? (productForDialog ?? undefined) : undefined,
       });
       setShowVisDialog(false);
       setVisualizationPrompt("");
       setSelectedPhotoStorageId(null);
-      setIkeaProductImageUrl(null);
-      setIkeaProductForDialog(null);
+      setProductImageUrl(null);
+      setProductForDialog(null);
       setActiveTab("visualizations");
       toast.success("Visualization queued", {
         description: "Your room transformation is being generated. This may take a minute.",
@@ -202,17 +202,17 @@ export default function RoomPage() {
   const openVisualizationDialog = (item?: {
     visualizationPrompt?: string;
     suggestedPhotoStorageId?: Id<"_storage">;
-    ikeaProduct?: { name: string; price: string; imageUrl: string; productUrl: string; fetchedAt: number };
+    suggestedProduct?: { name: string; price: string; imageUrl: string; productUrl: string; storeName: string; fetchedAt: number };
   }) => {
     let prompt = item?.visualizationPrompt || DEFAULT_VIS_PROMPT;
-    if (item?.ikeaProduct && item.visualizationPrompt) {
-      prompt = `${item.visualizationPrompt} Use the IKEA product "${item.ikeaProduct.name}" (${item.ikeaProduct.price}).`;
+    if (item?.suggestedProduct && item.visualizationPrompt) {
+      prompt = `${item.visualizationPrompt} Use the product "${item.suggestedProduct.name}" (${item.suggestedProduct.price}) from ${item.suggestedProduct.storeName}.`;
     }
     setVisualizationPrompt(prompt);
     setSelectedPhotoStorageId(item?.suggestedPhotoStorageId ?? room?.photos[0]?.storageId ?? null);
-    const ikea = item?.ikeaProduct ?? null;
-    setIkeaProductImageUrl(ikea?.imageUrl ?? null);
-    setIkeaProductForDialog(ikea ? { name: ikea.name, price: ikea.price, imageUrl: ikea.imageUrl, productUrl: ikea.productUrl } : null);
+    const product = item?.suggestedProduct ?? null;
+    setProductImageUrl(product?.imageUrl ?? null);
+    setProductForDialog(product ? { name: product.name, price: product.price, imageUrl: product.imageUrl, productUrl: product.productUrl, storeName: product.storeName } : null);
     setShowVisDialog(true);
   };
 
@@ -250,8 +250,8 @@ export default function RoomPage() {
       .filter((item) => item.visualizationPrompt)
       .map((item, i) => {
         let line = `${i + 1}. ${item.visualizationPrompt}`;
-        if (item.ikeaProduct) {
-          line += ` Use the IKEA product "${item.ikeaProduct.name}" (${item.ikeaProduct.price}).`;
+        if (item.suggestedProduct) {
+          line += ` Use the product "${item.suggestedProduct.name}" (${item.suggestedProduct.price}) from ${item.suggestedProduct.storeName}.`;
         }
         return line;
       });
@@ -267,8 +267,8 @@ export default function RoomPage() {
 
     setVisualizationPrompt(combinedPrompt);
     setSelectedPhotoStorageId(firstPhotoId);
-    setIkeaProductImageUrl(null);
-    setIkeaProductForDialog(null);
+    setProductImageUrl(null);
+    setProductForDialog(null);
     setShowVisDialog(true);
   };
 
@@ -417,7 +417,7 @@ export default function RoomPage() {
       )}
 
       <VisualizationDialog
-        key={ikeaProductForDialog?.imageUrl ?? "no-ikea-product"}
+        key={productForDialog?.imageUrl ?? "no-product"}
         open={showVisDialog}
         onOpenChange={setShowVisDialog}
         photos={room.photos}
@@ -427,7 +427,7 @@ export default function RoomPage() {
         onPromptChange={setVisualizationPrompt}
         onGenerate={handleGenerateVisualization}
         defaultPrompt={DEFAULT_VIS_PROMPT}
-        ikeaProduct={ikeaProductForDialog ?? undefined}
+        suggestedProduct={productForDialog ?? undefined}
       />
 
       <Lightbox

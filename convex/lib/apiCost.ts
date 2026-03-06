@@ -10,7 +10,7 @@ type OpenAIPrice = {
 };
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL ?? "gpt-4o";
-const GEMINI_IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL ?? "gemini-3.1-flash-image-preview";
+const GEMINI_IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL ?? "gemini-2.5-flash-image";
 
 const DEFAULT_OPENAI_PRICING: Record<string, OpenAIPrice> = {
   [OPENAI_MODEL]: {

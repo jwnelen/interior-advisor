@@ -38,12 +38,13 @@ export const generate = mutation({
     photoStorageId: v.optional(v.id("_storage")),
     controlNetMode: v.optional(v.string()),
     strength: v.optional(v.number()),
-    ikeaProductImageUrl: v.optional(v.string()),
-    ikeaProduct: v.optional(v.object({
+    productImageUrl: v.optional(v.string()),
+    suggestedProduct: v.optional(v.object({
       name: v.string(),
       price: v.string(),
       imageUrl: v.string(),
       productUrl: v.string(),
+      storeName: v.string(),
     })),
   },
   handler: async (ctx, args) => {
@@ -80,7 +81,7 @@ export const generate = mutation({
         prompt: args.prompt,
         controlNetMode: args.controlNetMode ?? "depth",
         strength: args.strength ?? 0.5,
-        ikeaProduct: args.ikeaProduct,
+        suggestedProduct: args.suggestedProduct,
       },
       createdAt: Date.now(),
     });
@@ -93,7 +94,7 @@ export const generate = mutation({
       type: args.type,
       controlNetMode: args.controlNetMode ?? "depth",
       strength: args.strength ?? 0.5,
-      ikeaProductImageUrl: args.ikeaProductImageUrl,
+      productImageUrl: args.productImageUrl,
     });
 
     // Increment rate limit after successful scheduling

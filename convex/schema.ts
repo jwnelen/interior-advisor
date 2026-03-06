@@ -145,17 +145,18 @@ export default defineSchema({
       visualizationPrompt: v.optional(v.string()),
       suggestedPhotoStorageId: v.optional(v.id("_storage")),
       selected: v.optional(v.boolean()),
-      ikeaProduct: v.optional(v.object({
+      suggestedProduct: v.optional(v.object({
         name: v.string(),
         price: v.string(),
         imageUrl: v.string(),
         productUrl: v.string(),
+        storeName: v.string(),
         fetchedAt: v.number(),
       })),
     })),
     summary: v.optional(v.string()),
     error: v.optional(v.string()),
-    ikeaSearchStatus: v.optional(v.union(
+    productSearchStatus: v.optional(v.union(
       v.literal("pending"),
       v.literal("searching"),
       v.literal("completed"),
@@ -189,11 +190,12 @@ export default defineSchema({
       controlNetMode: v.string(),
       strength: v.number(),
       seed: v.optional(v.number()),
-      ikeaProduct: v.optional(v.object({
+      suggestedProduct: v.optional(v.object({
         name: v.string(),
         price: v.string(),
         imageUrl: v.string(),
         productUrl: v.string(),
+        storeName: v.string(),
       })),
     }),
     output: v.optional(v.object({

@@ -53,6 +53,10 @@ VISUALIZATION PROMPTS:
 - Describe materials and finishes that match the style (e.g., "natural linen texture", "smooth ceramic with geometric pattern")
 - End with "Keep everything else in the room identical to the original photo."
 
+PRODUCT SUGGESTIONS:
+- Match product sources to the room style: IKEA for Scandinavian/minimalist, Pottery Barn for traditional, West Elm for modern, CB2 for contemporary, Anthropologie for bohemian, Wayfair for eclectic/budget-friendly
+- Product suggestions are informational — actual store matching happens via search
+
 EXAMPLES OF STYLE-SPECIFIC LANGUAGE:
 - Modern: "sleek", "geometric", "monochromatic", "matte black", "chrome accents"
 - Scandinavian: "light wood", "cozy textiles", "neutral palette", "functional beauty", "hygge"
@@ -304,7 +308,7 @@ export const generateRecommendations = internalAction({
         });
       }
 
-      await ctx.scheduler.runAfter(0, internal.ai.ikeaSearch.searchIkeaForRecommendations, {
+      await ctx.scheduler.runAfter(0, internal.ai.productSearch.searchProductsForRecommendations, {
         recommendationId: args.recommendationId,
       });
     } catch (error) {
@@ -568,7 +572,7 @@ ${context}`;
         });
       }
 
-      await ctx.scheduler.runAfter(0, internal.ai.ikeaSearch.searchIkeaForRecommendations, {
+      await ctx.scheduler.runAfter(0, internal.ai.productSearch.searchProductsForRecommendations, {
         recommendationId: args.recommendationId,
       });
     } catch (error) {

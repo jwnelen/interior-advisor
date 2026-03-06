@@ -38,5 +38,5 @@ export const env = {
   GOOGLE_GEMINI_API_KEY: process.env.GOOGLE_GEMINI_API_KEY!,
   SERP_API_KEY: process.env.SERP_API_KEY!,
   OPENAI_MODEL: process.env.OPENAI_MODEL ?? "gpt-4o",
-  GEMINI_IMAGE_MODEL: process.env.GEMINI_IMAGE_MODEL ?? "gemini-3.1-flash-image-preview",
+  GEMINI_IMAGE_MODEL: process.env.GEMINI_IMAGE_MODEL ?? "gemini-2.5-flash-image",
 };

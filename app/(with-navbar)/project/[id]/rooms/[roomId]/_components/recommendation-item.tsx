@@ -3,16 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { IMPACT_COLORS, DIFFICULTY_LABELS } from "@/lib/constants";
 
-interface IkeaProduct {
+interface SuggestedProduct {
   name: string;
   price: string;
   imageUrl: string;
   productUrl: string;
+  storeName: string;
   fetchedAt: number;
 }
 
 interface RecommendationItemProps {
-  ikeaSearchStatus?: "pending" | "searching" | "completed" | "failed";
+  productSearchStatus?: "pending" | "searching" | "completed" | "failed";
   item: {
     id: string;
     title: string;
@@ -25,23 +26,23 @@ interface RecommendationItemProps {
     visualizationPrompt?: string;
     suggestedPhotoStorageId?: Id<"_storage">;
     selected?: boolean;
-    ikeaProduct?: IkeaProduct;
+    suggestedProduct?: SuggestedProduct;
   };
   photos: { storageId: Id<"_storage">; url: string }[];
   recommendationId: Id<"recommendations">;
   onToggle: (args: { id: Id<"recommendations">; itemId: string; selected: boolean }) => void;
-  onVisualize: (item: { visualizationPrompt?: string; suggestedPhotoStorageId?: Id<"_storage">; ikeaProduct?: IkeaProduct }) => void;
+  onVisualize: (item: { visualizationPrompt?: string; suggestedPhotoStorageId?: Id<"_storage">; suggestedProduct?: SuggestedProduct }) => void;
 }
 
 export function RecommendationItem({
   item,
   photos,
   recommendationId,
-  ikeaSearchStatus,
+  productSearchStatus,
   onToggle,
   onVisualize,
 }: RecommendationItemProps) {
-  const ikeaSearching = ikeaSearchStatus === "pending" || ikeaSearchStatus === "searching";
+  const productSearching = productSearchStatus === "pending" || productSearchStatus === "searching";
   const suggestedPhoto = item.suggestedPhotoStorageId
     ? photos.find((p) => p.storageId === item.suggestedPhotoStorageId)
     : null;
@@ -72,27 +73,27 @@ export function RecommendationItem({
           <p className="text-xs text-text-tertiary mt-1">{item.reasoning}</p>
         </div>
       </div>
-      {item.ikeaProduct ? (
+      {item.suggestedProduct ? (
         <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-3 p-2 rounded-md border bg-muted/40">
           <img
-            src={item.ikeaProduct.imageUrl}
-            alt={item.ikeaProduct.name}
+            src={item.suggestedProduct.imageUrl}
+            alt={item.suggestedProduct.name}
             className="w-12 h-12 object-contain rounded flex-shrink-0"
           />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{item.ikeaProduct.name}</p>
-            <p className="text-xs text-muted-foreground">{item.ikeaProduct.price}</p>
+            <p className="text-sm font-medium truncate">{item.suggestedProduct.name}</p>
+            <p className="text-xs text-muted-foreground">{item.suggestedProduct.price}</p>
           </div>
           <a
-            href={item.ikeaProduct.productUrl}
+            href={item.suggestedProduct.productUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-blue-600 hover:underline shrink-0"
           >
-            View on IKEA ↗
+            View on {item.suggestedProduct.storeName} ↗
           </a>
         </div>
-      ) : ikeaSearching ? (
+      ) : productSearching ? (
         <div className="mt-3 flex items-center gap-3 p-2 rounded-md border bg-muted/40 animate-pulse">
           <div className="w-12 h-12 rounded bg-muted flex-shrink-0" />
           <div className="flex-1 space-y-1.5">

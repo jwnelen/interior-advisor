@@ -6,7 +6,7 @@ import { internal } from "../_generated/api";
 import { withRetry } from "../lib/retry";
 import { createLogger } from "../lib/logger";
 
-// Categories that map to purchasable IKEA products
+// Categories that map to purchasable products
 const SEARCHABLE_CATEGORIES = new Set([
   "furniture",
   "decor",
@@ -48,21 +48,21 @@ function buildSearchQuery(title: string, category: string): string {
   // Normalize whitespace
   query = query.replace(/\s+/g, " ").trim();
 
-  return `IKEA ${query || category}`;
+  return query || category;
 }
 
-export const searchIkeaForRecommendations = internalAction({
+export const searchProductsForRecommendations = internalAction({
   args: {
     recommendationId: v.id("recommendations"),
   },
   handler: async (ctx, args) => {
-    const logger = createLogger("ikeaSearch", {
+    const logger = createLogger("productSearch", {
       recommendationId: args.recommendationId,
     });
 
     const serpApiKey = process.env.SERP_API_KEY;
     if (!serpApiKey) {
-      logger.error("SERP_API_KEY not configured, skipping IKEA search");
+      logger.error("SERP_API_KEY not configured, skipping product search");
       return;
     }
 
@@ -75,17 +75,17 @@ export const searchIkeaForRecommendations = internalAction({
       return;
     }
 
-    logger.info("Starting IKEA product search", {
+    logger.info("Starting product search", {
       itemCount: recommendation.items.length,
     });
 
-    await ctx.runMutation(internal.recommendations.updateIkeaProducts, {
+    await ctx.runMutation(internal.recommendations.updateSuggestedProducts, {
       id: args.recommendationId,
       itemUpdates: [],
-      ikeaSearchStatus: "searching",
+      productSearchStatus: "searching",
     });
 
-    const itemUpdates: Array<{ itemId: string; ikeaProduct: { name: string; price: string; imageUrl: string; productUrl: string; fetchedAt: number } }> = [];
+    const itemUpdates: Array<{ itemId: string; suggestedProduct: { name: string; price: string; imageUrl: string; productUrl: string; storeName: string; fetchedAt: number } }> = [];
 
     for (const item of recommendation.items) {
       if (!SEARCHABLE_CATEGORIES.has(item.category)) {
@@ -97,7 +97,7 @@ export const searchIkeaForRecommendations = internalAction({
       }
 
       const query = buildSearchQuery(item.title, item.category);
-      logger.info("Searching IKEA for item", { itemId: item.id, query });
+      logger.info("Searching for item", { itemId: item.id, query });
 
       try {
         const url = new URL("https://serpapi.com/search.json");
@@ -116,41 +116,33 @@ export const searchIkeaForRecommendations = internalAction({
 
         const shoppingResults = response.shopping_results ?? [];
 
-        // Find the first result that links to ikea.com
-        // In SerpAPI Google Shopping: `link` is a Google URL, `product_link` is the direct retailer URL
-        const ikeaResult = shoppingResults.find((r) => {
-          const directLink = r.product_link ?? "";
-          const googleLink = r.link ?? "";
-          const source = r.source ?? "";
-          return directLink.includes("ikea.com") || googleLink.includes("ikea.com") || source.toLowerCase().includes("ikea");
+        // Take the first result that has both a product URL and thumbnail
+        const result = shoppingResults.find((r) => {
+          return (r.product_link || r.link) && r.thumbnail;
         });
 
-        if (ikeaResult) {
-          // Prefer product_link (direct retailer URL) over link (Google URL)
-          const productUrl =
-            (ikeaResult.product_link?.includes("ikea.com") ? ikeaResult.product_link : null) ??
-            (ikeaResult.link?.includes("ikea.com") ? ikeaResult.link : null) ??
-            ikeaResult.product_link ??
-            ikeaResult.link ??
-            "";
-          const imageUrl = ikeaResult.thumbnail ?? "";
-          const price = ikeaResult.price ?? "";
+        if (result) {
+          const productUrl = result.product_link ?? result.link ?? "";
+          const imageUrl = result.thumbnail ?? "";
+          const price = result.price ?? "";
+          const storeName = result.source ?? "Store";
 
           if (productUrl && imageUrl) {
             itemUpdates.push({
               itemId: item.id,
-              ikeaProduct: {
-                name: ikeaResult.title,
+              suggestedProduct: {
+                name: result.title,
                 price,
                 imageUrl,
                 productUrl,
+                storeName,
                 fetchedAt: Date.now(),
               },
             });
-            logger.info("Found IKEA product", { itemId: item.id, name: ikeaResult.title });
+            logger.info("Found product", { itemId: item.id, name: result.title, storeName });
           }
         } else {
-          logger.info("No IKEA result found for item", { itemId: item.id, query });
+          logger.info("No result found for item", { itemId: item.id, query });
         }
       } catch (error) {
         logger.error("SerpAPI search failed for item", { itemId: item.id, error });
@@ -158,13 +150,13 @@ export const searchIkeaForRecommendations = internalAction({
       }
     }
 
-    await ctx.runMutation(internal.recommendations.updateIkeaProducts, {
+    await ctx.runMutation(internal.recommendations.updateSuggestedProducts, {
       id: args.recommendationId,
       itemUpdates,
-      ikeaSearchStatus: "completed",
+      productSearchStatus: "completed",
     });
 
-    logger.info("IKEA product search completed", {
+    logger.info("Product search completed", {
       found: itemUpdates.length,
       total: recommendation.items.length,
     });

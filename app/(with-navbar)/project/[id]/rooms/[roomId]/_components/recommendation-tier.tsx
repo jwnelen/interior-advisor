@@ -25,7 +25,7 @@ interface RecommendationTierProps {
   onGenerate: () => void;
   onRegenerate: (note?: string) => void;
   onToggle: (args: { id: Id<"recommendations">; itemId: string; selected: boolean }) => void;
-  onVisualize: (item: { visualizationPrompt?: string; suggestedPhotoStorageId?: Id<"_storage">; ikeaProduct?: { name: string; price: string; imageUrl: string; productUrl: string; fetchedAt: number } }) => void;
+  onVisualize: (item: { visualizationPrompt?: string; suggestedPhotoStorageId?: Id<"_storage">; suggestedProduct?: { name: string; price: string; imageUrl: string; productUrl: string; storeName: string; fetchedAt: number } }) => void;
   emptyMessage: string;
 }
 
@@ -108,7 +108,7 @@ export function RecommendationTier({
                   item={item}
                   photos={photos}
                   recommendationId={tier._id}
-                  ikeaSearchStatus={tier.ikeaSearchStatus}
+                  productSearchStatus={tier.productSearchStatus}
                   onToggle={onToggle}
                   onVisualize={onVisualize}
                 />
