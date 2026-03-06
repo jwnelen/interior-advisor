@@ -117,42 +117,42 @@ export const analyze = internalAction({
         }
       }
 
-      const contentParts: Array<
-        | { type: "image_url"; image_url: { url: string; detail: "high" | "auto" } }
-        | { type: "text"; text: string }
+      const inputContent: Array<
+        | { type: "input_image"; image_url: string; detail: "high" | "auto" }
+        | { type: "input_text"; text: string }
       > = [];
 
       imageUrls.forEach((url, index) => {
-        contentParts.push({
-          type: "image_url",
-          image_url: { url, detail: index === 0 ? "high" : "auto" },
+        inputContent.push({
+          type: "input_image",
+          image_url: url,
+          detail: index === 0 ? "high" : "auto",
         });
       });
 
-      contentParts.push({
-        type: "text",
+      inputContent.push({
+        type: "input_text",
         text: buildSceneAnalysisUserPrompt(styleProfile),
       });
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-      logger.info("Calling OpenAI GPT-4o for scene analysis");
+      logger.info("Calling OpenAI for scene analysis");
 
       // Wrap OpenAI call in retry logic to handle transient failures
       const response = await withRetry(
-        () => openai.chat.completions.create({
+        () => openai.responses.create({
           model,
-          messages: [
-            { role: "system", content: SCENE_ANALYSIS_SYSTEM_PROMPT },
-            { role: "user", content: contentParts },
-          ],
-          response_format: { type: "json_object" },
-          max_completion_tokens: 3000,
+          instructions: SCENE_ANALYSIS_SYSTEM_PROMPT,
+          input: [{ role: "user", content: inputContent }],
+          text: { format: { type: "json_object" } },
+          max_output_tokens: 3000,
+          stream: false,
         }),
         { maxRetries: 3, baseDelay: 1000, maxDelay: 8000 }
       );
 
-      const content = response.choices[0].message.content;
+      const content = response.output_text;
       if (!content) {
         logger.error("No response from OpenAI");
         throw new Error("No response from OpenAI");

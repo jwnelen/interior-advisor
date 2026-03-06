@@ -66,15 +66,15 @@ EXAMPLES OF STYLE-SPECIFIC LANGUAGE:
 
 Respond with valid JSON only.`;
 
-const QUICK_WINS_PROMPT = `Generate 5-7 "quick win" recommendations organized by effort level:
+const QUICK_WINS_PROMPT = `Generate 3-5 "quick win" recommendations organized by effort level. Keep descriptions concise.
 
-**SUPER QUICK WINS (0-2 items, $0 cost):**
+**SUPER QUICK WINS (0-1 items, $0 cost):**
 - Moving/rearranging existing furniture for better flow
 - Decluttering or reorganizing existing items
 - Repurposing items already in the room
 - These require NO purchases, just rearrangement
 
-**QUICK WINS (3-5 items, under $200 each):**
+**QUICK WINS (2-4 items, under $200 each):**
 - Accessories, textiles, lighting, plants, organization, artwork
 - Small paint projects (accent walls, furniture painting, trim)
 - DIY or easy installation
@@ -108,7 +108,7 @@ Response format:
   "summary": "Brief overview emphasizing style alignment"
 }`;
 
-const TRANSFORMATIONS_PROMPT = `Generate 3-5 "transformation" recommendations:
+const TRANSFORMATIONS_PROMPT = `Generate 2-3 "transformation" recommendations. Keep descriptions concise.
 - Budget: $200-2000 each
 - Effort: May require professional help or significant DIY
 - Impact: Significant room improvement
@@ -232,19 +232,18 @@ export const generateRecommendations = internalAction({
 
       // Wrap OpenAI call in retry logic to handle transient failures
       const response = await withRetry(
-        () => openai.chat.completions.create({
+        () => openai.responses.create({
           model,
-          messages: [
-            { role: "system", content: ADVISOR_SYSTEM_PROMPT },
-            { role: "user", content: context + "\n\n" + tierPrompt + userContext },
-          ],
-          response_format: { type: "json_object" },
-          max_completion_tokens: 3000,
+          instructions: ADVISOR_SYSTEM_PROMPT,
+          input: context + "\n\n" + tierPrompt + userContext + "\n\nRespond with valid JSON only.",
+          text: { format: { type: "json_object" } },
+          max_output_tokens: 6000,
+          stream: false,
         }),
         { maxRetries: 3, baseDelay: 1000, maxDelay: 8000 }
       );
 
-      const content = response.choices[0].message.content;
+      const content = response.output_text;
       if (!content) {
         logger.error("No response from OpenAI");
         throw new Error("No response from OpenAI");
@@ -509,17 +508,16 @@ ${CUSTOM_QUESTION_PROMPT}
 
 ${context}`;
 
-      const response = await openai.chat.completions.create({
+      const response = await openai.responses.create({
         model,
-        messages: [
-          { role: "system", content: ADVISOR_SYSTEM_PROMPT },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: { type: "json_object" },
-        max_completion_tokens: 2000,
+        instructions: ADVISOR_SYSTEM_PROMPT,
+        input: userPrompt + "\n\nRespond with valid JSON only.",
+        text: { format: { type: "json_object" } },
+        max_output_tokens: 2000,
+        stream: false,
       });
 
-      const content = response.choices[0].message.content;
+      const content = response.output_text;
       if (!content) {
         throw new Error("No response from OpenAI");
       }

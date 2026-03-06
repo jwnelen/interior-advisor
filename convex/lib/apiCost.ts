@@ -40,15 +40,20 @@ function roundUsd(value: number): number {
 export function normalizeOpenAITokenUsage(
   usage:
     | {
+        // Chat Completions API
         prompt_tokens?: number | null;
         completion_tokens?: number | null;
+        // Responses API
+        input_tokens?: number | null;
+        output_tokens?: number | null;
+        // Both
         total_tokens?: number | null;
       }
     | null
     | undefined
 ): OpenAITokenUsage {
-  const inputTokens = usage?.prompt_tokens ?? 0;
-  const outputTokens = usage?.completion_tokens ?? 0;
+  const inputTokens = usage?.input_tokens ?? usage?.prompt_tokens ?? 0;
+  const outputTokens = usage?.output_tokens ?? usage?.completion_tokens ?? 0;
   const totalTokens = usage?.total_tokens ?? inputTokens + outputTokens;
   return { inputTokens, outputTokens, totalTokens };
 }
