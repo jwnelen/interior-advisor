@@ -8,11 +8,12 @@ interface LightboxVisualization {
   output?: { url: string };
   input: {
     prompt: string;
-    ikeaProduct?: {
+    suggestedProduct?: {
       name: string;
       price: string;
       imageUrl: string;
       productUrl: string;
+      storeName: string;
     };
   };
 }
@@ -90,21 +91,21 @@ export function Lightbox({ visualizations, index, photos, onIndexChange }: Light
                     <div className="flex-1 flex items-center justify-center overflow-hidden">
                       <img src={currentVis.output?.url} alt="Generated visualization" className="w-full h-full object-contain rounded" />
                     </div>
-                    {currentVis.input.ikeaProduct && (
+                    {currentVis.input.suggestedProduct && (
                       <a
-                        href={currentVis.input.ikeaProduct.productUrl}
+                        href={currentVis.input.suggestedProduct.productUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-shrink-0 flex items-center gap-2 mt-1 px-2 py-1.5 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
                       >
                         <img
-                          src={currentVis.input.ikeaProduct.imageUrl}
-                          alt={currentVis.input.ikeaProduct.name}
+                          src={currentVis.input.suggestedProduct.imageUrl}
+                          alt={currentVis.input.suggestedProduct.name}
                           className="w-10 h-10 object-contain rounded flex-shrink-0 bg-white"
                         />
                         <div className="min-w-0">
-                          <p className="text-xs text-slate-200 font-medium truncate">{currentVis.input.ikeaProduct.name}</p>
-                          <p className="text-xs text-slate-400">{currentVis.input.ikeaProduct.price} · View on IKEA ↗</p>
+                          <p className="text-xs text-slate-200 font-medium truncate">{currentVis.input.suggestedProduct.name}</p>
+                          <p className="text-xs text-slate-400">{currentVis.input.suggestedProduct.price} · View on {currentVis.input.suggestedProduct.storeName} ↗</p>
                         </div>
                       </a>
                     )}

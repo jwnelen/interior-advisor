@@ -104,11 +104,12 @@ export interface RecommendationItem {
   visualizationPrompt?: string;
   suggestedPhotoStorageId?: Id<"_storage">;
   selected?: boolean;
-  ikeaProduct?: {
+  suggestedProduct?: {
     name: string;
     price: string;
     imageUrl: string;
     productUrl: string;
+    storeName: string;
     fetchedAt: number;
   };
 }
@@ -123,7 +124,7 @@ export interface Recommendation {
   items: RecommendationItem[];
   summary?: string;
   error?: string;
-  ikeaSearchStatus?: "pending" | "searching" | "completed" | "failed";
+  productSearchStatus?: "pending" | "searching" | "completed" | "failed";
   createdAt: number;
 }
 
@@ -141,11 +142,12 @@ export interface Visualization {
     controlNetMode: string;
     strength: number;
     seed?: number;
-    ikeaProduct?: {
+    suggestedProduct?: {
       name: string;
       price: string;
       imageUrl: string;
       productUrl: string;
+      storeName: string;
     };
   };
   output?: {

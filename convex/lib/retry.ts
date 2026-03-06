@@ -37,6 +37,7 @@ function isRetryable(error: unknown): boolean {
       message.includes("etimedout") ||
       message.includes("rate limit") ||
       message.includes("429") ||
+      message.includes("500") ||
       message.includes("503") ||
       message.includes("504")
     ) {

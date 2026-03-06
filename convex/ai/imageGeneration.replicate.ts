@@ -27,7 +27,7 @@ export const generateVisualization = internalAction({
     type: v.string(),
     controlNetMode: v.string(),
     strength: v.number(),
-    ikeaProductImageUrl: v.optional(v.string()),
+    productImageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const model = "google/nano-banana";
@@ -58,11 +58,11 @@ export const generateVisualization = internalAction({
 
       // Build image_input: selected room photo + optional IKEA product image
       const imageInput: string[] = [originalUrl];
-      if (args.ikeaProductImageUrl) {
-        imageInput.push(args.ikeaProductImageUrl);
+      if (args.productImageUrl) {
+        imageInput.push(args.productImageUrl);
       }
 
-      logger.info("Built image_input", { count: imageInput.length, hasIkeaProduct: !!args.ikeaProductImageUrl });
+      logger.info("Built image_input", { count: imageInput.length, hasIkeaProduct: !!args.productImageUrl });
 
       const replicateToken = process.env.REPLICATE_API_TOKEN;
       if (!replicateToken) {

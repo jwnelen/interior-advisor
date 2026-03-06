@@ -241,20 +241,21 @@ export const getById = internalQuery({
   },
 });
 
-export const updateIkeaProducts = internalMutation({
+export const updateSuggestedProducts = internalMutation({
   args: {
     id: v.id("recommendations"),
     itemUpdates: v.array(v.object({
       itemId: v.string(),
-      ikeaProduct: v.object({
+      suggestedProduct: v.object({
         name: v.string(),
         price: v.string(),
         imageUrl: v.string(),
         productUrl: v.string(),
+        storeName: v.string(),
         fetchedAt: v.number(),
       }),
     })),
-    ikeaSearchStatus: v.union(
+    productSearchStatus: v.union(
       v.literal("pending"),
       v.literal("searching"),
       v.literal("completed"),
@@ -265,16 +266,16 @@ export const updateIkeaProducts = internalMutation({
     const rec = await ctx.db.get(args.id);
     if (!rec) return;
 
-    const updateMap = new Map(args.itemUpdates.map((u) => [u.itemId, u.ikeaProduct]));
+    const updateMap = new Map(args.itemUpdates.map((u) => [u.itemId, u.suggestedProduct]));
 
     const updatedItems = rec.items.map((item) => {
-      const ikeaProduct = updateMap.get(item.id);
-      return ikeaProduct ? { ...item, ikeaProduct } : item;
+      const suggestedProduct = updateMap.get(item.id);
+      return suggestedProduct ? { ...item, suggestedProduct } : item;
     });
 
     await ctx.db.patch(args.id, {
       items: updatedItems,
-      ikeaSearchStatus: args.ikeaSearchStatus,
+      productSearchStatus: args.productSearchStatus,
     });
   },
 });
