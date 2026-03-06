@@ -24,6 +24,7 @@ import type * as lib_logger from "../lib/logger.js";
 import type * as lib_rateLimiting from "../lib/rateLimiting.js";
 import type * as lib_retry from "../lib/retry.js";
 import type * as lib_validators from "../lib/validators.js";
+import type * as migrations from "../migrations.js";
 import type * as projects from "../projects.js";
 import type * as recommendations from "../recommendations.js";
 import type * as rooms from "../rooms.js";
@@ -53,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   "lib/rateLimiting": typeof lib_rateLimiting;
   "lib/retry": typeof lib_retry;
   "lib/validators": typeof lib_validators;
+  migrations: typeof migrations;
   projects: typeof projects;
   recommendations: typeof recommendations;
   rooms: typeof rooms;
