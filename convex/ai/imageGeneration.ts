@@ -7,6 +7,7 @@ import { GoogleGenAI } from "@google/genai";
 import { withRetry } from "../lib/retry";
 import { createLogger } from "../lib/logger";
 import { estimateGeminiImageCostUsd } from "../lib/apiCost";
+import { env } from "../lib/env";
 
 interface StyleProfile {
   primaryStyle: string;
@@ -84,7 +85,7 @@ export const generateVisualization = internalAction({
     ikeaProductImageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const model = "gemini-3.1-flash-image-preview";
+    const model = env.GEMINI_IMAGE_MODEL;
     let apiCalled = false;
     let estimatedCostUsd = 0;
 

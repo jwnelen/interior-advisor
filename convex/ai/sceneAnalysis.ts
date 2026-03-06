@@ -7,6 +7,7 @@ import OpenAI from "openai";
 import { withRetry } from "../lib/retry";
 import { createLogger } from "../lib/logger";
 import { estimateOpenAICostUsd, normalizeOpenAITokenUsage } from "../lib/apiCost";
+import { env } from "../lib/env";
 
 const SCENE_ANALYSIS_SYSTEM_PROMPT = `You are an expert interior designer analyzing room photographs. You may receive multiple photos of the same room from different angles. Combine observations from all provided images into a single comprehensive analysis.
 
@@ -69,7 +70,7 @@ export const analyze = internalAction({
     photoStorageIds: v.array(v.id("_storage")),
   },
   handler: async (ctx, args) => {
-    const model = "gpt-4o";
+    const model = env.OPENAI_MODEL;
     let openAiCallCompleted = false;
     let usage = normalizeOpenAITokenUsage(null);
     let estimatedCostUsd = 0;

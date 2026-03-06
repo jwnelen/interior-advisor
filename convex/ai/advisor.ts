@@ -7,6 +7,7 @@ import OpenAI from "openai";
 import { withRetry } from "../lib/retry";
 import { createLogger } from "../lib/logger";
 import { estimateOpenAICostUsd, normalizeOpenAITokenUsage } from "../lib/apiCost";
+import { env } from "../lib/env";
 
 const ADVISOR_SYSTEM_PROMPT = `You are an expert interior designer providing actionable recommendations to improve a room.
 You have been given a detailed analysis of a room photo and the user's style profile from a discovery quiz.
@@ -189,7 +190,7 @@ export const generateRecommendations = internalAction({
     userNote: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const model = "gpt-4o";
+    const model = env.OPENAI_MODEL;
     let openAiCallCompleted = false;
     let usage = normalizeOpenAITokenUsage(null);
     let estimatedCostUsd = 0;
@@ -469,7 +470,7 @@ export const answerCustomQuestion = internalAction({
     userQuestion: v.string(),
   },
   handler: async (ctx, args) => {
-    const model = "gpt-4o";
+    const model = env.OPENAI_MODEL;
     let openAiCallCompleted = false;
     let usage = normalizeOpenAITokenUsage(null);
     let estimatedCostUsd = 0;
